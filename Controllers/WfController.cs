@@ -57,12 +57,12 @@ namespace SZY.Platform.WebApi.Controllers
 
 
         [HttpGet("TransportCar")]
-        public async Task<ActionResult<ApiResult>> TransportCar([FromQuery] WorkTaskQueryParm parm)
+        public async Task<ActionResult<ApiResult>> TransportCar([FromQuery] CarQueryParm parm)
         {
             ApiResult retapi = new ApiResult { code = Code.Failure };
             try
             {
-                await Publish_FakeCar_Message(_logger);
+                await Publish_FakeCar_Message(_logger,parm.times,parm.sleep,parm.roadpart,parm.direction,parm.carcount);
 
             }
             catch (System.Exception ex)
@@ -299,14 +299,14 @@ namespace SZY.Platform.WebApi.Controllers
 
         
 
-        public static async Task<List<carinfo>> GenerCar()
+        public static async Task<List<carinfo>> GenerCar(int singlecarcount)
         {
             List<carinfo> ret = new List<carinfo>();
             for (int i = 1; i <= 3; i++)//模拟三根车道
             {
                 int roadlane = i;
                 string caridfront = "沪A" + i;
-                int curroadlanecarcount = 3;
+                int curroadlanecarcount = singlecarcount;
 
                 Random ran1 = new Random();
                 int firstcarstart = ran1.Next(0, 100);
@@ -345,7 +345,7 @@ namespace SZY.Platform.WebApi.Controllers
             }
             return ret;
         }
-        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger)
+        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger,int times,int sleep,int rp,int dirc,int carcount)
         {
 
             var mqttFactory = new MqttFactory();
@@ -359,17 +359,30 @@ namespace SZY.Platform.WebApi.Controllers
 
                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-                for (int i = 0; i < 1; i++)//时间间隔
+                List<carinfo> carinfolist = await GenerCar(carcount);
+                int carspeed = 1;
+                for (int i = 0; i < times; i++)//时间间隔
                 {
-                    //Thread.Sleep(1000);
+                    Thread.Sleep(sleep);
                     transportret ret = new transportret();
                     ret.code = 0;
-                    DateTime dtStart = TimeZoneInfo.ConvertTimeFromUtc(new DateTime(1970, 1, 1, 0, 0, 0), TimeZoneInfo.Local);
-                    long timeStamp = Convert.ToInt32((DateTime.Now - dtStart).TotalSeconds);
-                    ret.timestamp = timeStamp.ToString();
+                    //DateTime dtStart = TimeZoneInfo.ConvertTimeFromUtc(new DateTime(1970, 1, 1, 0, 0, 0), TimeZoneInfo.Local);
+                    //long timeStamp = Convert.ToInt32((DateTime.Now - dtStart).TotalMilliseconds);
+                    DateTime startTime = TimeZoneInfo.ConvertTime(new DateTime(1970, 1, 1, 8, 0, 0, 0), TimeZoneInfo.Local);
+                    long t = (DateTime.Now.Ticks - startTime.Ticks) / 10000;   //除10000调整为13位 
+                    //TimeSpan ts = new TimeSpan(DateTime.Now.Ticks);
+                    //ret.timestamp = ts.TotalMilliseconds.ToString();
+                    ret.timestamp = t.ToString();
                     ret.msg = "成功";
-                    List<carinfo> carinfolist = await GenerCar();
-                    ret.result = new transportresult() { roadpart = 2,direction = 1, carinfo = carinfolist };
+
+                    if (i != 0)//第二次开始，要让车辆动起来，则需要改变distance
+                    {
+                        for (int j = 0; j < carinfolist.Count; j++)
+                        {
+                            carinfolist[j].distance = carinfolist[j].distance + carspeed;
+                        }
+                    }
+                    ret.result = new transportresult() { roadpart = rp,direction = dirc, carinfo = carinfolist };
                     string payload = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ms");
 
                     string payloadstr = JsonConvert.SerializeObject(ret);
@@ -396,7 +409,14 @@ namespace SZY.Platform.WebApi.Controllers
     }
 
 
-
+    public class CarQueryParm
+    {
+        public int times { get; set; }
+        public int sleep { get; set; }
+        public int roadpart { get; set; }
+        public int direction { get; set; }
+        public int carcount { get; set; }
+    }
     public class carinfo
     {
         public string carid { get; set; }
