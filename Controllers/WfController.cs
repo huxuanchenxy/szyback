@@ -62,7 +62,7 @@ namespace SZY.Platform.WebApi.Controllers
             ApiResult retapi = new ApiResult { code = Code.Failure };
             try
             {
-                await Publish_FakeCar_Message(_logger,parm.times,parm.sleep,parm.roadpart,parm.direction,parm.carcount);
+                await Publish_FakeCar_Message(_logger,parm.times,parm.sleep,parm.roadpart,parm.direction,parm.carcount,parm.carspeed);
 
             }
             catch (System.Exception ex)
@@ -345,7 +345,7 @@ namespace SZY.Platform.WebApi.Controllers
             }
             return ret;
         }
-        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger,int times,int sleep,int rp,int dirc,int carcount)
+        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger,int times,int sleep,int rp,int dirc,int carcount,int cspeed)
         {
 
             var mqttFactory = new MqttFactory();
@@ -360,7 +360,7 @@ namespace SZY.Platform.WebApi.Controllers
                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
                 List<carinfo> carinfolist = await GenerCar(carcount);
-                int carspeed = 1;
+                int carspeed = cspeed;
                 for (int i = 0; i < times; i++)//时间间隔
                 {
                     Thread.Sleep(sleep);
@@ -416,6 +416,7 @@ namespace SZY.Platform.WebApi.Controllers
         public int roadpart { get; set; }
         public int direction { get; set; }
         public int carcount { get; set; }
+        public int carspeed { get; set; }
     }
     public class carinfo
     {
