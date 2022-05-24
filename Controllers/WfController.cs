@@ -63,7 +63,7 @@ namespace SZY.Platform.WebApi.Controllers
             try
             {
                 await Publish_FakeCar_Message(_logger,parm.times,parm.sleep,parm.roadpart,parm.direction,parm.carcount,parm.carspeed);
-
+                retapi.code = Code.Success;
             }
             catch (System.Exception ex)
             {
