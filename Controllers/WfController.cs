@@ -62,7 +62,7 @@ namespace SZY.Platform.WebApi.Controllers
             ApiResult retapi = new ApiResult { code = Code.Failure };
             try
             {
-                await Publish_FakeCar_Message(_logger,parm.times,parm.sleep,parm.roadpart,parm.direction,parm.carcount,parm.carspeed);
+                await Publish_FakeCar_Message(_logger,parm.times,parm.sleep,parm.roadpart,parm.direction,parm.carcount,parm.carspeed,parm.firstcarloc);
                 retapi.code = Code.Success;
             }
             catch (System.Exception ex)
@@ -299,7 +299,7 @@ namespace SZY.Platform.WebApi.Controllers
 
         
 
-        public static async Task<List<carinfo>> GenerCar(int singlecarcount)
+        public static async Task<List<carinfo>> GenerCar(int singlecarcount,int firststart)
         {
             List<carinfo> ret = new List<carinfo>();
             for (int i = 1; i <= 3; i++)//模拟三根车道
@@ -309,7 +309,7 @@ namespace SZY.Platform.WebApi.Controllers
                 int curroadlanecarcount = singlecarcount;
 
                 Random ran1 = new Random();
-                int firstcarstart = ran1.Next(0, 100);
+                int firstcarstart = ran1.Next(0, firststart);
                 int distance = 0;
                 for (int j = 1; j <= curroadlanecarcount; j++)
                 {
@@ -345,7 +345,7 @@ namespace SZY.Platform.WebApi.Controllers
             }
             return ret;
         }
-        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger,int times,int sleep,int rp,int dirc,int carcount,int cspeed)
+        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger,int times,int sleep,int rp,int dirc,int carcount,int cspeed,int firstcarloccation)
         {
 
             var mqttFactory = new MqttFactory();
@@ -359,7 +359,7 @@ namespace SZY.Platform.WebApi.Controllers
 
                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-                List<carinfo> carinfolist = await GenerCar(carcount);
+                List<carinfo> carinfolist = await GenerCar(carcount,firstcarloccation);
                 int carspeed = cspeed;
                 for (int i = 0; i < times; i++)//时间间隔
                 {
@@ -417,6 +417,7 @@ namespace SZY.Platform.WebApi.Controllers
         public int direction { get; set; }
         public int carcount { get; set; }
         public int carspeed { get; set; }
+        public int firstcarloc { get; set; }
     }
     public class carinfo
     {
