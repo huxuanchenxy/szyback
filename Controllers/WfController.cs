@@ -62,7 +62,7 @@ namespace SZY.Platform.WebApi.Controllers
             ApiResult retapi = new ApiResult { code = Code.Failure };
             try
             {
-                await Publish_FakeCar_Message(_logger,parm.times,parm.sleep,parm.roadpart,parm.direction,parm.carcount,parm.carspeed,parm.firstcarloc);
+                await Publish_FakeCar_Message(_logger,parm.times,parm.sleep,parm.roadpart,parm.direction,parm.carcount,parm.carspeed,parm.firstcarloc,parm.offset1,parm.offset2);
                 retapi.code = Code.Success;
             }
             catch (System.Exception ex)
@@ -299,7 +299,7 @@ namespace SZY.Platform.WebApi.Controllers
 
         
 
-        public static async Task<List<carinfo>> GenerCar(int singlecarcount,int firststart)
+        public static async Task<List<carinfo>> GenerCar(int singlecarcount,int firststart,int offset1,int offset2)
         {
             List<carinfo> ret = new List<carinfo>();
             for (int i = 1; i <= 3; i++)//模拟三根车道
@@ -323,7 +323,7 @@ namespace SZY.Platform.WebApi.Controllers
                     else
                     {
                         Random ran2 = new Random();
-                        int flowdistance = ran2.Next(100, 200);//下一辆车的偏移距离
+                        int flowdistance = ran2.Next(offset1, offset2);//下一辆车的偏移距离
                         distance = distance + flowdistance;
                     }
 
@@ -345,7 +345,7 @@ namespace SZY.Platform.WebApi.Controllers
             }
             return ret;
         }
-        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger,int times,int sleep,int rp,int dirc,int carcount,int cspeed,int firstcarloccation)
+        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger,int times,int sleep,int rp,int dirc,int carcount,int cspeed,int firstcarloccation,int offset1,int offset2)
         {
 
             var mqttFactory = new MqttFactory();
@@ -359,7 +359,7 @@ namespace SZY.Platform.WebApi.Controllers
 
                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-                List<carinfo> carinfolist = await GenerCar(carcount,firstcarloccation);
+                List<carinfo> carinfolist = await GenerCar(carcount,firstcarloccation,offset1,offset2);
                 int carspeed = cspeed;
                 for (int i = 0; i < times; i++)//时间间隔
                 {
@@ -418,6 +418,8 @@ namespace SZY.Platform.WebApi.Controllers
         public int carcount { get; set; }
         public int carspeed { get; set; }
         public int firstcarloc { get; set; }
+        public int offset1 { get; set; }
+        public int offset2 { get; set; }
     }
     public class carinfo
     {
