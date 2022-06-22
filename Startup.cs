@@ -67,6 +67,7 @@ namespace SZY.Platform.WebApi
             //PollingEngine.Configure(t => Task.Run(t));
             services.AddTransient<IWorkTaskService, WorkTaskService>();
             services.AddEssentialService();
+            //services.AddMqttClientHostedService();
             services.AddCSRedisCache(options =>
             {
                 options.ConnectionString = this.Configuration["redis:ConnectionString"];

@@ -15,6 +15,8 @@ using System.Threading;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Text;
+using MQTTnet.Client;
 
 namespace SZY.Platform.WebApi.Controllers
 {
@@ -28,32 +30,18 @@ namespace SZY.Platform.WebApi.Controllers
         private IHttpContextAccessor _accessor;
         private readonly IWorkTaskService _service;
         private readonly Microsoft.Extensions.Logging.ILogger _logger;
-        public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger)
+        private MosquittoMqttClientService _mqttclientservice;
+        public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, MosquittoMqttClientService mqttclientservice)
         {
             _service = service;
             this._schedulerFactory = schedulerFactory;
             _quart = quart;
             _accessor = accessor;
             _logger = logger;
+            _mqttclientservice = mqttclientservice;
         }
 
-        [HttpGet("QueryReadyTasks")]
-        public async Task<ActionResult<ApiResult>> QueryReadyTasks([FromQuery] WorkTaskQueryParm parm)
-        {
-            ApiResult ret = new ApiResult { code = Code.Failure };
-            try
-            {
-                ret = await _service.GetReadyTasks(parm);
 
-            }
-            catch (System.Exception ex)
-            {
-                ret.msg = string.Format(
-                    "获取当前用户待办任务数据失败, 异常信息:{0}",
-                    ex.Message);
-            }
-            return ret;
-        }
 
 
         [HttpGet("TransportCar")]
@@ -73,6 +61,32 @@ namespace SZY.Platform.WebApi.Controllers
             }
             return retapi;
         }
+
+        [HttpGet("ReceiveTransportCar")]
+        public async Task<ActionResult<ApiResult>> ReceiveTransportCar([FromQuery] string parm)
+        {
+            ApiResult ret = new ApiResult { code = Code.Failure };
+            try
+            {
+                //DateTime startTime = TimeZoneInfo.ConvertTime(new DateTime(1970, 1, 1, 8, 0, 0, 0), TimeZoneInfo.Local);
+                //long t = (DateTime.Now.Ticks - startTime.Ticks) / 10000;   //除10000调整为13位 
+
+                //client = new MqttFactory().CreateMqttClient();
+                //client.UseApplicationMessageReceivedHandler(OnMessage);
+
+                //await StartClientAsync();
+                await _mqttclientservice.StartAsync(CancellationToken.None);
+            }
+            catch (System.Exception ex)
+            {
+                ret.msg = string.Format(
+                    "异常信息:{0}",
+                    ex.Message);
+            }
+            return ret;
+        }
+
+        
 
         [HttpPost("JingGaiData")]
         public async Task<ActionResult<JingGaiRet>> JingGaiData(JingGaiObj parm)
@@ -296,8 +310,6 @@ namespace SZY.Platform.WebApi.Controllers
 
         //   { "carid":"沪a9999","cartype":1,"carcolor":2,"distance":300,"curx":36.3131600729,"cury":36.3131600729,"roadlane":2}
         //]   
-
-        
 
         public static async Task<List<carinfo>> GenerCar(int singlecarcount,int firststart,int offset1,int offset2)
         {
