@@ -1,7 +1,11 @@
-﻿using MQTTnet;
+﻿using Microsoft.Extensions.Logging;
+using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Protocol;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using System;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -25,9 +29,22 @@ namespace SZY.Platform.WebApi.Client
         private readonly string menu = "Controller SMS API \r\nDigite a opcao abaixo: \r\nOP1 - Informar Temperatura \r\nOP2 - Desodorizar Ambiente \r\nOP3 - Abrir Portaria \r\nOP4 - Alimentar Pets";
 
         private IMqttClient client;
+        private readonly Logger _logger;
 
         public MosquittoMqttClient(IMqttClientOptions options)
         {
+
+            _logger = new LoggerConfiguration()
+#if DEBUG
+        .MinimumLevel.Debug()
+#else
+        .MinimumLevel.Information()
+#endif
+        //.MinimumLevel.Override("Microsoft", LogEventLevel.)
+        //.Enrich.FromLogContext()
+        .WriteTo.RollingFile(@"c:\\SZYLogs\transportcar.txt")
+        .CreateLogger();
+
             Options = new MqttClientOptionsBuilder()
                     .WithTcpServer("47.101.220.2", 1883)
                     //.WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
@@ -85,7 +102,7 @@ namespace SZY.Platform.WebApi.Client
                 {
                     Console.WriteLine("Nova mensagem recebida do broker: ");
                     Console.WriteLine(jsonPayload);
-
+                    _logger.Warning(jsonPayload);
                     //var payload = JsonSerializer.Deserialize<PayloadMessage>(jsonPayload);
 
                     //if (!string.IsNullOrEmpty(payload.message))
