@@ -15,6 +15,11 @@ namespace SZY.Platform.WebApi.Service
             client = new MosquittoMqttClient(options);
         }
 
+        //public MosquittoMqttClientService()
+        //{
+        //    client = new MosquittoMqttClient(options);
+        //}
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             return client.StartClientAsync();

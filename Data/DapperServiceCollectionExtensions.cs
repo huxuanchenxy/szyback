@@ -24,6 +24,7 @@ namespace SZY.Platform.WebApi.Data
             services.AddTransient<IWfprocessRepo<Wfprocess>, WfprocessRepo>();
             services.AddTransient<IConstructionPlanMonthChartRepo<ConstructionPlanMonthChart>, ConstructionPlanMonthChartRepo>();
             services.AddTransient<IMaintenanceRepo<MaintenanceItem>, MaintenanceRepo>();
+            services.AddTransient<ITransportCameraRepo<TransportCarCameraToTunnel>, TransportCameraRepo>();
 
             //配置列名映射
             FluentMapper.Initialize(config =>
@@ -51,7 +52,9 @@ namespace SZY.Platform.WebApi.Data
                 config.AddMap(new JingGaiMap());
                 config.AddMap(new JingGaiDeviceMap());
                 config.AddMap(new JingGaiAlarmMap());
-                
+
+                config.AddMap(new TransportCarCameraToTunnelMap());
+
             });
             return services;
         }

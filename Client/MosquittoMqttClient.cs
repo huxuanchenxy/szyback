@@ -3,14 +3,18 @@ using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Protocol;
+using Newtonsoft.Json;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using SZY.Platform.WebApi.Data;
+using SZY.Platform.WebApi.Model;
 
 namespace SZY.Platform.WebApi.Client
 {
@@ -31,6 +35,10 @@ namespace SZY.Platform.WebApi.Client
         private IMqttClient client;
         private readonly Logger _logger;
 
+        private List<TransportCarCameraToTunnel> cameralist;
+
+        private ITransportCameraRepo<TransportCarCameraToTunnel> _repo;
+
         public MosquittoMqttClient(IMqttClientOptions options)
         {
 
@@ -45,6 +53,10 @@ namespace SZY.Platform.WebApi.Client
         .WriteTo.RollingFile(@"c:\\SZYLogs\transportcar.txt")
         .CreateLogger();
 
+            GenarateCamera();
+
+
+
             Options = new MqttClientOptionsBuilder()
                     .WithTcpServer("47.101.220.2", 1883)
                     //.WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
@@ -54,6 +66,24 @@ namespace SZY.Platform.WebApi.Client
             client = new MqttFactory().CreateMqttClient();
             client.UseApplicationMessageReceivedHandler(OnMessage);
         }
+
+        /// <summary>
+        /// 摄像头映射偏移量
+        /// </summary>
+        private void GenarateCamera()
+        {
+            cameralist = new List<TransportCarCameraToTunnel>();
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+940", offset = 0, roadpart = 2, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+1940", offset = 1000, roadpart = 2, direction = 1 });
+
+
+        }
+
+
+       
+
+
+
 
 
         public async Task PublishMessageAsync(string topic, string payload, bool retainFlag = false, int qos = 0)
@@ -100,15 +130,19 @@ namespace SZY.Platform.WebApi.Client
 
                 if (topic.Contains("transport/car"))
                 {
-                    Console.WriteLine("Nova mensagem recebida do broker: ");
-                    Console.WriteLine(jsonPayload);
+                    //Console.WriteLine("Nova mensagem recebida do broker: ");
+                    //Console.WriteLine(jsonPayload);
                     _logger.Warning(jsonPayload);
-                    //var payload = JsonSerializer.Deserialize<PayloadMessage>(jsonPayload);
-
-                    //if (!string.IsNullOrEmpty(payload.message))
-                    //{
-
-                    //}
+                    //var payload = JsonSerializer.Deserialize<TransportCarRoot>(jsonPayload);
+                    var obj = JsonConvert.DeserializeObject<TransportCarRoot>(jsonPayload);
+                    if (obj.result != null)
+                    {
+                        var camera = obj.result.camera;
+                        if (obj.result.carinfo != null)
+                        {
+                            
+                        }
+                    }
                 }
             }
             catch (Exception ex)

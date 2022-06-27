@@ -75,7 +75,7 @@ namespace SZY.Platform.WebApi.Controllers
                 //client.UseApplicationMessageReceivedHandler(OnMessage);
 
                 //await StartClientAsync();
-                await _mqttclientservice.StartAsync(CancellationToken.None);
+                //await _mqttclientservice.StartAsync(CancellationToken.None);
             }
             catch (System.Exception ex)
             {
