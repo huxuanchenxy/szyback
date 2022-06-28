@@ -47,7 +47,7 @@ namespace SZY.Platform.WebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public int timestamp { get; set; }
+        public long timestamp { get; set; }
 
         /// <summary>
         /// 成功

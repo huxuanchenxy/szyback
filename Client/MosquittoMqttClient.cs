@@ -9,6 +9,7 @@ using Serilog.Core;
 using Serilog.Events;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
@@ -39,7 +40,7 @@ namespace SZY.Platform.WebApi.Client
 
         private ITransportCameraRepo<TransportCarCameraToTunnel> _repo;
 
-        public MosquittoMqttClient(IMqttClientOptions options)
+        public MosquittoMqttClient()
         {
 
             _logger = new LoggerConfiguration()
@@ -103,8 +104,9 @@ namespace SZY.Platform.WebApi.Client
         }
 
 
-        public async Task StartClientAsync()
+        public async Task StartClientAsync(ITransportCameraRepo<TransportCarCameraToTunnel> repo)
         {
+            _repo = repo;
             await client.ConnectAsync(Options, CancellationToken.None);
 
             // anuncia status online
@@ -128,6 +130,7 @@ namespace SZY.Platform.WebApi.Client
                 var jsonPayload = Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
                 var topic = eventArgs.ApplicationMessage.Topic;
 
+                var sss = _repo.GetPageList();
                 if (topic.Contains("transport/car"))
                 {
                     //Console.WriteLine("Nova mensagem recebida do broker: ");
@@ -138,9 +141,25 @@ namespace SZY.Platform.WebApi.Client
                     if (obj.result != null)
                     {
                         var camera = obj.result.camera;
-                        if (obj.result.carinfo != null)
+                        if (camera != null)
                         {
-                            
+                            var curcamera = cameralist.Where(c => c.camera == obj.result.camera).FirstOrDefault();
+                            int curoffset = curcamera.offset;
+                            int curdirection = curcamera.direction;
+                            int curroadpart = curcamera.roadpart;
+                            obj.result.direction = curdirection;
+                            obj.result.roadpart = curroadpart;
+                            if (obj.result.carinfo != null && obj.result.carinfo.Count > 0)
+                            {
+                                for(int i = 0;i<obj.result.carinfo.Count;i++)
+                                {
+                                    obj.result.carinfo[i].distance += curoffset;
+                                }
+                            }
+
+                            await PublishMessageAsync(@"transport/car/front", JsonConvert.SerializeObject(obj), false, 0);
+                            _logger.Warning("ConvertToFront");
+                            _logger.Warning(JsonConvert.SerializeObject(obj));
                         }
                     }
                 }

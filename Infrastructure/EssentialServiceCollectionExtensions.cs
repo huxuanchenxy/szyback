@@ -7,6 +7,7 @@ using System;
 using Microsoft.Extensions.Hosting;
 using MQTTnet.Client.Options;
 using SZY.Platform.WebApi.Options;
+using SZY.Platform.WebApi.Client;
 
 namespace SZY.Platform.WebApi.Infrastructure
 {
@@ -44,7 +45,9 @@ namespace SZY.Platform.WebApi.Infrastructure
 
             services.AddTransient<IMaintenanceService, MaintenanceService>();
 
+            services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
 
+            services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();
             services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
             {
                 aspOptionBuilder
@@ -53,11 +56,11 @@ namespace SZY.Platform.WebApi.Infrastructure
                 .WithTcpServer("47.101.220.2", 1883);
             });
 
-            services.AddSingleton<MosquittoMqttClientService>();
-            services.AddSingleton<IHostedService>(serviceProvider =>
-            {
-                return serviceProvider.GetService<MosquittoMqttClientService>();
-            });
+            //services.AddSingleton<MosquittoMqttClientService>();
+            //services.AddSingleton<IHostedService>(serviceProvider =>
+            //{
+            //    return serviceProvider.GetService<MosquittoMqttClientService>();
+            //});
             return services;
         }
     }

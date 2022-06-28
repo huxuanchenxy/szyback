@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Text;
 using MQTTnet.Client;
+using SZY.Platform.WebApi.Client;
 
 namespace SZY.Platform.WebApi.Controllers
 {
@@ -31,6 +32,7 @@ namespace SZY.Platform.WebApi.Controllers
         private readonly IWorkTaskService _service;
         private readonly Microsoft.Extensions.Logging.ILogger _logger;
         private MosquittoMqttClientService _mqttclientservice;
+        private readonly MosquittoMqttClient client;
         public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, MosquittoMqttClientService mqttclientservice)
         {
             _service = service;
@@ -39,6 +41,7 @@ namespace SZY.Platform.WebApi.Controllers
             _accessor = accessor;
             _logger = logger;
             _mqttclientservice = mqttclientservice;
+            client = new MosquittoMqttClient();
         }
 
 
@@ -73,9 +76,9 @@ namespace SZY.Platform.WebApi.Controllers
 
                 //client = new MqttFactory().CreateMqttClient();
                 //client.UseApplicationMessageReceivedHandler(OnMessage);
-
+                 //await client.StartClientAsync();
                 //await StartClientAsync();
-                //await _mqttclientservice.StartAsync(CancellationToken.None);
+                await _mqttclientservice.StartAsync(CancellationToken.None);
             }
             catch (System.Exception ex)
             {
