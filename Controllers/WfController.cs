@@ -78,7 +78,7 @@ namespace SZY.Platform.WebApi.Controllers
                 //client.UseApplicationMessageReceivedHandler(OnMessage);
                  //await client.StartClientAsync();
                 //await StartClientAsync();
-                await _mqttclientservice.StartAsync(CancellationToken.None);
+                //await _mqttclientservice.StartAsync(CancellationToken.None);
             }
             catch (System.Exception ex)
             {
@@ -329,6 +329,7 @@ namespace SZY.Platform.WebApi.Controllers
                 for (int j = 1; j <= curroadlanecarcount; j++)
                 {
                     string curcarid = caridfront + j.ToString();
+                    string curnum = i.ToString() + j.ToString();
                     //模拟第一次该车辆的起点位置
                     
                     if (j == 1)
@@ -350,6 +351,7 @@ namespace SZY.Platform.WebApi.Controllers
                     int carcolor = ran4.Next(1, 7);
                     ret.Add(new carinfo()
                     {
+                        num = int.Parse(curnum),
                         carid = curcarid,
                         cartype = cartype,
                         carcolor = carcolor,
@@ -397,14 +399,14 @@ namespace SZY.Platform.WebApi.Controllers
                             carinfolist[j].distance = carinfolist[j].distance + carspeed;
                         }
                     }
-                    ret.result = new transportresult() { roadpart = rp,direction = dirc, carinfo = carinfolist };
+                    ret.result = new transportresult() { roadpart = rp,direction = dirc, carinfo = carinfolist,camera = "K4+940" };
                     string payload = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ms");
 
                     string payloadstr = JsonConvert.SerializeObject(ret);
 
                     _logger.LogWarning(payloadstr);
                     var applicationMessage = new MqttApplicationMessageBuilder()
-                    .WithTopic("transport/car")
+                    .WithTopic("transport/car/frontmock")
                     .WithPayload(payloadstr)
                                         .Build();
 
@@ -438,6 +440,7 @@ namespace SZY.Platform.WebApi.Controllers
     }
     public class carinfo
     {
+        public int num { get; set; }
         public string carid { get; set; }
         public int cartype { get; set; }
         public int carcolor { get; set; }
@@ -461,6 +464,7 @@ namespace SZY.Platform.WebApi.Controllers
         public string roadpartx { get; set;}
         public string roadparty { get; set;}
         public int direction { get; set; }
+        public string camera { get; set; }
         public List<carinfo> carinfo { get; set; }
     }
 

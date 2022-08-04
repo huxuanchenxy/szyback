@@ -74,14 +74,16 @@ namespace SZY.Platform.WebApi.Client
         private void GenarateCamera()
         {
             cameralist = new List<TransportCarCameraToTunnel>();
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+940", offset = 0, roadpart = 2, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+1940", offset = 1000, roadpart = 2, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+760", offset = 760, roadpart = 2, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+820", offset = 820, roadpart = 2, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+880", offset = 880, roadpart = 2, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+940", offset = 940, roadpart = 2, direction = 1 });
 
 
         }
 
 
-       
+
 
 
 
@@ -89,11 +91,11 @@ namespace SZY.Platform.WebApi.Client
 
         public async Task PublishMessageAsync(string topic, string payload, bool retainFlag = false, int qos = 0)
         {
-            Console.WriteLine("Enviando mensagem para o broker: ");
-            Console.WriteLine(payload);
+            //Console.WriteLine("Enviando mensagem para o broker: ");
+            //Console.WriteLine(payload);
 
-            Console.Write("Topico: ");
-            Console.WriteLine(topic);
+            //Console.Write("Topico: ");
+            //Console.WriteLine(topic);
 
             await client.PublishAsync(new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
@@ -130,11 +132,14 @@ namespace SZY.Platform.WebApi.Client
                 var jsonPayload = Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
                 var topic = eventArgs.ApplicationMessage.Topic;
 
-                var sss = _repo.GetPageList();
+                int pxlong = 1;
+                int cmlong = 1;
+                //var sss = _repo.GetPageList();
                 if (topic.Contains("transport/car"))
                 {
                     //Console.WriteLine("Nova mensagem recebida do broker: ");
                     //Console.WriteLine(jsonPayload);
+                    _logger.Warning("transport/car");
                     _logger.Warning(jsonPayload);
                     //var payload = JsonSerializer.Deserialize<TransportCarRoot>(jsonPayload);
                     var obj = JsonConvert.DeserializeObject<TransportCarRoot>(jsonPayload);
@@ -144,22 +149,26 @@ namespace SZY.Platform.WebApi.Client
                         if (camera != null)
                         {
                             var curcamera = cameralist.Where(c => c.camera == obj.result.camera).FirstOrDefault();
-                            int curoffset = curcamera.offset;
-                            int curdirection = curcamera.direction;
-                            int curroadpart = curcamera.roadpart;
-                            obj.result.direction = curdirection;
-                            obj.result.roadpart = curroadpart;
-                            if (obj.result.carinfo != null && obj.result.carinfo.Count > 0)
+                            if (curcamera != null)
                             {
-                                for(int i = 0;i<obj.result.carinfo.Count;i++)
+                                int curoffset = curcamera.offset * pxlong / cmlong;
+                                int curdirection = curcamera.direction;
+                                int curroadpart = curcamera.roadpart;
+                                obj.result.direction = curdirection;
+                                obj.result.roadpart = curroadpart;
+                                if (obj.result.carinfo != null && obj.result.carinfo.Count > 0)
                                 {
-                                    obj.result.carinfo[i].distance += curoffset;
+                                    for (int i = 0; i < obj.result.carinfo.Count; i++)
+                                    {
+                                        obj.result.carinfo[i].distance += curoffset;
+                                    }
                                 }
+
+                                await PublishMessageAsync(@"transport/car/front", JsonConvert.SerializeObject(obj), false, 0);
+                                _logger.Warning("transport/car/front");
+                                _logger.Warning(JsonConvert.SerializeObject(obj));
                             }
 
-                            await PublishMessageAsync(@"transport/car/front", JsonConvert.SerializeObject(obj), false, 0);
-                            _logger.Warning("ConvertToFront");
-                            _logger.Warning(JsonConvert.SerializeObject(obj));
                         }
                     }
                 }
