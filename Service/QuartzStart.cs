@@ -48,7 +48,7 @@ namespace SZY.Platform.WebApi.Service
                 //    .Build();                  // 等待执行任务            
 
                 var trigger = TriggerBuilder.Create()
-                            .WithSimpleSchedule(x => x.WithIntervalInSeconds(300).RepeatForever())//每两秒执行一次
+                            .WithSimpleSchedule(x => x.WithIntervalInSeconds(30).RepeatForever())//每两秒执行一次
                             .Build();
                 //4、创建任务
                 var jobDetail = JobBuilder.Create<FundJob>()

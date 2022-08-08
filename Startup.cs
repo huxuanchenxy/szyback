@@ -116,15 +116,15 @@ builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             //app.RegisterConsul(lifetime, consulService);
             app.UseHttpsRedirection();
             app.UseMvc();
-            //var quartz = app.ApplicationServices.GetRequiredService<QuartzStart>();
-            //lifetime.ApplicationStarted.Register(() =>
-            //{
-            //    quartz.Start().Wait();
-            //});
-            //lifetime.ApplicationStopped.Register(() =>
-            //{
-            //    quartz.Stop();
-            //});
+            var quartz = app.ApplicationServices.GetRequiredService<QuartzStart>();
+            lifetime.ApplicationStarted.Register(() =>
+            {
+                quartz.Start().Wait();
+            });
+            lifetime.ApplicationStopped.Register(() =>
+            {
+                quartz.Stop();
+            });
         }
 
     }
