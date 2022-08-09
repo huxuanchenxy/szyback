@@ -47,8 +47,9 @@ namespace SZY.Platform.WebApi.Service
                 //                                   //.RepeatForever())                    
                 //    .Build();                  // 等待执行任务            
 
+                int sec = int.Parse(_configuration["SunWater:ShutDownSec"]);
                 var trigger = TriggerBuilder.Create()
-                            .WithSimpleSchedule(x => x.WithIntervalInSeconds(30).RepeatForever())//每两秒执行一次
+                            .WithSimpleSchedule(x => x.WithIntervalInSeconds(sec).RepeatForever())
                             .Build();
                 //4、创建任务
                 var jobDetail = JobBuilder.Create<FundJob>()
@@ -59,6 +60,9 @@ namespace SZY.Platform.WebApi.Service
                 //await Task.Delay(TimeSpan.FromMilliseconds(2000));              
                 // 启动任务调度器                  
                 await scheduler.Start();
+                //await Task.Delay(TimeSpan.FromSeconds(10));
+
+
             }
             catch (SchedulerException se)
             {

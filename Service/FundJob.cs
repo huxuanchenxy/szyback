@@ -59,7 +59,7 @@ namespace SZY.Platform.WebApi.Service
 
 
             var mqttFactory = new MqttFactory();
-            string payloadstr = "{\"A01\":110000,\"res\":\"123\"}";
+            string payloadstr = "{\"A01\":100000,\"res\":\"123\"}";
             using (var mqttClient = mqttFactory.CreateMqttClient())
             {
                 var mqttClientOptions = new MqttClientOptionsBuilder()
@@ -78,7 +78,7 @@ namespace SZY.Platform.WebApi.Service
                 {
                     await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
                 }
-                _logger.Warning("/set/4GMQTT000801");
+                _logger.Warning("/set/4GMQTT000801/shutdown");
                 _logger.Warning(payloadstr);
                 //Console.WriteLine("MQTT application message is published.");
             }

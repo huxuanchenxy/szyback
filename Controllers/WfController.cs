@@ -18,6 +18,8 @@ using Newtonsoft.Json;
 using System.Text;
 using MQTTnet.Client;
 using SZY.Platform.WebApi.Client;
+using Serilog.Core;
+using Serilog;
 
 namespace SZY.Platform.WebApi.Controllers
 {
@@ -33,6 +35,8 @@ namespace SZY.Platform.WebApi.Controllers
         private readonly Microsoft.Extensions.Logging.ILogger _logger;
         private MosquittoMqttClientService _mqttclientservice;
         private readonly MosquittoMqttClient client;
+        private readonly Logger _logger1;
+
         public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, MosquittoMqttClientService mqttclientservice)
         {
             _service = service;
@@ -42,6 +46,18 @@ namespace SZY.Platform.WebApi.Controllers
             _logger = logger;
             _mqttclientservice = mqttclientservice;
             client = new MosquittoMqttClient();
+
+
+            _logger1 = new LoggerConfiguration()
+#if DEBUG
+        .MinimumLevel.Debug()
+#else
+        .MinimumLevel.Information()
+#endif
+        //.MinimumLevel.Override("Microsoft", LogEventLevel.)
+        //.Enrich.FromLogContext()
+        .WriteTo.RollingFile(@"c:\\SZYLogs\watercontrol.txt")
+        .CreateLogger();
         }
 
 
@@ -274,6 +290,87 @@ namespace SZY.Platform.WebApi.Controllers
             return ret;
         }
 
+
+        [HttpPost("SunWaterOpen")]
+        public async Task<ActionResult<ApiResult>> SunWaterOpen()
+        {
+            ApiResult ret = new ApiResult {  code = 0,msg="success" };
+            try
+            {
+                var mqttFactory = new MqttFactory();
+                string payloadstr = "{\"A01\":110000,\"res\":\"123\"}";
+                using (var mqttClient = mqttFactory.CreateMqttClient())
+                {
+                    var mqttClientOptions = new MqttClientOptionsBuilder()
+                        //.WithTcpServer("broker.hivemq.com")
+                        .WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
+                        .Build();
+
+                    await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+                    var applicationMessage = new MqttApplicationMessageBuilder()
+                        .WithTopic("/set/4GMQTT000801")
+                        .WithPayload(payloadstr)
+                        .Build();
+
+                    if (mqttClient != null)
+                    {
+                        await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+                    }
+                    _logger1.Warning("/set/4GMQTT000801/manulopen");
+                    _logger1.Warning(payloadstr);
+                    //Console.WriteLine("MQTT application message is published.");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ret.msg = string.Format(
+                    "异常信息:{0}",
+                    ex.Message);
+            }
+            return ret;
+        }
+
+
+        [HttpPost("SunWaterShutDown")]
+        public async Task<ActionResult<ApiResult>> SunWaterShutDown()
+        {
+            ApiResult ret = new ApiResult { code = 0, msg = "success" };
+            try
+            {
+                var mqttFactory = new MqttFactory();
+                string payloadstr = "{\"A01\":100000,\"res\":\"123\"}";
+                using (var mqttClient = mqttFactory.CreateMqttClient())
+                {
+                    var mqttClientOptions = new MqttClientOptionsBuilder()
+                        //.WithTcpServer("broker.hivemq.com")
+                        .WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
+                        .Build();
+
+                    await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+                    var applicationMessage = new MqttApplicationMessageBuilder()
+                        .WithTopic("/set/4GMQTT000801")
+                        .WithPayload(payloadstr)
+                        .Build();
+
+                    if (mqttClient != null)
+                    {
+                        await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+                    }
+                    _logger1.Warning("/set/4GMQTT000801/manulshutdown");
+                    _logger1.Warning(payloadstr);
+                    //Console.WriteLine("MQTT application message is published.");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                ret.msg = string.Format(
+                    "异常信息:{0}",
+                    ex.Message);
+            }
+            return ret;
+        }
         public static async Task Publish_Application_Message()
         {
             /*
