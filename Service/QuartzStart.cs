@@ -48,8 +48,10 @@ namespace SZY.Platform.WebApi.Service
                 //    .Build();                  // 等待执行任务            
 
                 int sec = int.Parse(_configuration["SunWater:ShutDownSec"]);
+                string crontab = _configuration["SunWater:Crontab"];
                 var trigger = TriggerBuilder.Create()
-                            .WithSimpleSchedule(x => x.WithIntervalInSeconds(sec).RepeatForever())
+                            //.WithSimpleSchedule(x => x.WithIntervalInSeconds(sec).RepeatForever())
+                            .WithCronSchedule(crontab)
                             .Build();
                 //4、创建任务
                 var jobDetail = JobBuilder.Create<FundJob>()

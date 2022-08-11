@@ -298,7 +298,7 @@ namespace SZY.Platform.WebApi.Controllers
             try
             {
                 var mqttFactory = new MqttFactory();
-                string payloadstr = "{\"A01\":110000,\"res\":\"123\"}";
+                string payloadstr = "{\"A02\":110000,\"res\":\"123\"}";
                 using (var mqttClient = mqttFactory.CreateMqttClient())
                 {
                     var mqttClientOptions = new MqttClientOptionsBuilder()
@@ -339,7 +339,7 @@ namespace SZY.Platform.WebApi.Controllers
             try
             {
                 var mqttFactory = new MqttFactory();
-                string payloadstr = "{\"A01\":100000,\"res\":\"123\"}";
+                string payloadstr = "{\"A02\":100000,\"res\":\"123\"}";
                 using (var mqttClient = mqttFactory.CreateMqttClient())
                 {
                     var mqttClientOptions = new MqttClientOptionsBuilder()
