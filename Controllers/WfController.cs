@@ -20,6 +20,7 @@ using MQTTnet.Client;
 using SZY.Platform.WebApi.Client;
 using Serilog.Core;
 using Serilog;
+using Newtonsoft.Json.Linq;
 
 namespace SZY.Platform.WebApi.Controllers
 {
@@ -36,6 +37,8 @@ namespace SZY.Platform.WebApi.Controllers
         private MosquittoMqttClientService _mqttclientservice;
         private readonly MosquittoMqttClient client;
         private readonly Logger _logger1;
+        private readonly Logger _logger2;
+
 
         public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, MosquittoMqttClientService mqttclientservice)
         {
@@ -57,6 +60,17 @@ namespace SZY.Platform.WebApi.Controllers
         //.MinimumLevel.Override("Microsoft", LogEventLevel.)
         //.Enrich.FromLogContext()
         .WriteTo.RollingFile(@"c:\\SZYLogs\watercontrol.txt")
+        .CreateLogger();
+
+            _logger2 = new LoggerConfiguration()
+#if DEBUG
+        .MinimumLevel.Debug()
+#else
+        .MinimumLevel.Information()
+#endif
+        //.MinimumLevel.Override("Microsoft", LogEventLevel.)
+        //.Enrich.FromLogContext()
+        .WriteTo.RollingFile(@"c:\\JingGaiLogs\log.txt")
         .CreateLogger();
         }
 
@@ -309,6 +323,28 @@ namespace SZY.Platform.WebApi.Controllers
         }
 
 
+        [HttpPost("JingGaiApi")]
+        public async Task<ActionResult<JingGaiRet2>> JingGaiApi(JObject json)
+        {
+            JingGaiRet2 ret = new JingGaiRet2 { success = true };
+            try
+            {
+                var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
+                _logger2.Warning("JingGaiApi 来自:" + ip + "的请求 " + json);
+                
+            }
+            catch (System.Exception ex)
+            {
+                _logger2.Warning("JingGaiApi " + ex.Message.ToString());
+                ret.success = false;
+                ret.err_code = -1;
+                ret.err_msg = string.Format(
+                    "异常信息:{0}",
+                    ex.Message);
+            }
+            return ret;
+        }
+
         [HttpPost("SunWaterOpen")]
         public async Task<ActionResult<ApiResult>> SunWaterOpen()
         {
@@ -418,7 +454,7 @@ namespace SZY.Platform.WebApi.Controllers
 
                 await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
 
-                Console.WriteLine("MQTT application message is published.");
+                //Console.WriteLine("MQTT application message is published.");
             }
         }
 
@@ -534,7 +570,7 @@ namespace SZY.Platform.WebApi.Controllers
 
                 //await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
 
-                Console.WriteLine("MQTT application message is published.");
+                //Console.WriteLine("MQTT application message is published.");
             }
         }
 
@@ -589,9 +625,16 @@ namespace SZY.Platform.WebApi.Controllers
         public string errmsg { get; set; }
     }
 
+    public class JingGaiRet2
+    {
+        public bool success { get; set; }
+        public int err_code { get; set; }
+        public string err_msg { get; set; }
+    }
 
-    //如果好用，请收藏地址，帮忙分享。
-    public class JingGaiData
+
+//如果好用，请收藏地址，帮忙分享。
+public class JingGaiData
     {
         /// <summary>
         /// 固件版本
