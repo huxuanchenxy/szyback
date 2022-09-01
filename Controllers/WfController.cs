@@ -331,7 +331,66 @@ namespace SZY.Platform.WebApi.Controllers
             {
                 var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
                 _logger2.Warning("JingGaiApi 来自:" + ip + "的请求 " + json);
+
+                JingGaiJson jsonobj = JsonConvert.DeserializeObject<JingGaiJson>(json.ToString());
+
+                //alarm_data 报警数据推送
+                //property 属性推送
+                //device_create 设备添加推送
+                //device_update 设备编辑推送
+                //device_delete 设备删除推送
+                string topic = string.Empty;
+                switch (jsonobj.push_type)
+                {
+                    case "alarm_data":
+                        topic = "/jinggai/alarm_data";
+                        break;
+                    case "property":
+                        topic = "/jinggai/property";
+                        break;
+                    case "device_create":
+                        topic = "/jinggai/device_create";
+                        break;
+                    case "device_update":
+                        topic = "/jinggai/device_update";
+                        break;
+                    case "device_delete":
+                        topic = "/jinggai/device_delete";
+                        break;
+                }
+                if (string.IsNullOrEmpty(topic))
+                {
+                    ret.err_msg = "empty pushtype";
+                    ret.err_code = -1;
+                    ret.success = false;
+                    return ret;
+                }
+
+                var mqttFactory = new MqttFactory();
                 
+                string payloadstr = json.ToString();
+                using (var mqttClient = mqttFactory.CreateMqttClient())
+                {
+                    var mqttClientOptions = new MqttClientOptionsBuilder()
+                        //.WithTcpServer("broker.hivemq.com")
+                        .WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
+                        .Build();
+
+                    await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+                    var applicationMessage = new MqttApplicationMessageBuilder()
+                        .WithTopic(topic)
+                        .WithPayload(payloadstr)
+                        .Build();
+
+                    if (mqttClient != null)
+                    {
+                        await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+                    }
+                    _logger2.Warning("已发送至:" + topic);
+                    _logger2.Warning(json.ToString());
+                    //Console.WriteLine("MQTT application message is published.");
+                }
             }
             catch (System.Exception ex)
             {
@@ -631,6 +690,15 @@ namespace SZY.Platform.WebApi.Controllers
         public int err_code { get; set; }
         public string err_msg { get; set; }
     }
+
+    public class JingGaiJson
+    {
+        public string client_id { get; set; }
+        public string model_type { get; set; }
+        public string push_type { get; set; }
+        public dynamic payload { get; set; }
+    }
+
 
 
 //如果好用，请收藏地址，帮忙分享。
