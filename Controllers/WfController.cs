@@ -69,7 +69,7 @@ namespace SZY.Platform.WebApi.Controllers
             ApiResult retapi = new ApiResult { code = Code.Failure };
             try
             {
-                await Publish_FakeCar_Message(_logger,parm.times,parm.sleep,parm.roadpart,parm.direction,parm.carcount,parm.carspeed,parm.firstcarloc,parm.offset1,parm.offset2);
+                await Publish_FakeCar_Message(_logger, parm.times, parm.sleep, parm.roadpart, parm.direction, parm.carcount, parm.carspeed, parm.firstcarloc, parm.offset1, parm.offset2);
                 retapi.code = Code.Success;
             }
             catch (System.Exception ex)
@@ -92,7 +92,7 @@ namespace SZY.Platform.WebApi.Controllers
 
                 //client = new MqttFactory().CreateMqttClient();
                 //client.UseApplicationMessageReceivedHandler(OnMessage);
-                 //await client.StartClientAsync();
+                //await client.StartClientAsync();
                 //await StartClientAsync();
                 //await _mqttclientservice.StartAsync(CancellationToken.None);
             }
@@ -105,17 +105,20 @@ namespace SZY.Platform.WebApi.Controllers
             return ret;
         }
 
-        
+
 
         [HttpPost("JingGaiData")]
         public async Task<ActionResult<JingGaiRet>> JingGaiData(JingGaiObj parm)
         {
-            JingGaiRet ret = new JingGaiRet {  success = true };
+            JingGaiRet ret = new JingGaiRet { success = true };
             try
             {
-
+                var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
+                _logger.LogWarning("JingGaiData 来自:" + ip + "的请求 deviceid: " + parm.device_id + " obj: " + JsonConvert.SerializeObject(parm));
                 //ret = await _service.QueryReadyActivityInstance(parm);
-                JingGai data = new JingGai() { device_id = parm.device_id,
+                JingGai data = new JingGai()
+                {
+                    device_id = parm.device_id,
                     device_type = parm.device_type,
                     fv = parm.data.fv,
                     soc = parm.data.soc,
@@ -138,12 +141,14 @@ namespace SZY.Platform.WebApi.Controllers
                     sensor_ph = parm.data.sensor_ph,
                     sensor_ch4_conc = parm.data.sensor_ch4_conc,
                     sensor_toxic_conc = parm.data.sensor_toxic_conc,
-                    date1 = DateTime.Now.ToString() 
+                    date1 = DateTime.Now.ToString()
                 };
                 await _service.AddJingGai(data);
+                _logger.LogWarning("JingGaiData 插入成功");
             }
             catch (System.Exception ex)
             {
+                _logger.LogWarning("JingGaiData" + ex.Message.ToString());
                 ret.errmsg = string.Format(
                     "异常信息:{0}",
                     ex.Message);
@@ -158,7 +163,8 @@ namespace SZY.Platform.WebApi.Controllers
             JingGaiRet ret = new JingGaiRet { success = true };
             try
             {
-
+                var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
+                _logger.LogWarning("JingGaiDevice 来自:" + ip + "的请求 deviceid: " + parm.device_id + " obj: " + JsonConvert.SerializeObject(parm));
                 //ret = await _service.QueryReadyActivityInstance(parm);
                 JingGaiDevice data = new JingGaiDevice()
                 {
@@ -172,9 +178,11 @@ namespace SZY.Platform.WebApi.Controllers
                     date1 = DateTime.Now.ToString()
                 };
                 await _service.AddJingGaiDevice(data);
+                _logger.LogWarning("JingGaiDevice db插入成功");
             }
             catch (System.Exception ex)
             {
+                _logger.LogWarning("JingGaiDevice" + ex.Message.ToString());
                 ret.errmsg = string.Format(
                     "异常信息:{0}",
                     ex.Message);
@@ -187,7 +195,7 @@ namespace SZY.Platform.WebApi.Controllers
         public async Task<ActionResult<JingGaiRet>> JingGaiAlarm(JingGaiAlarmObj parm)
         {
             var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
-            _logger.LogWarning("来自:" + ip + "的请求 deviceid: " + parm.device_id + " obj: " + JsonConvert.SerializeObject(parm) +" time: " + DateTime.Now);
+            _logger.LogWarning("JingGaiAlarm 来自:" + ip + "的请求 deviceid: " + parm.device_id + " obj: " + JsonConvert.SerializeObject(parm));
             JingGaiRet ret = new JingGaiRet { success = true };
             try
             {
@@ -221,7 +229,7 @@ namespace SZY.Platform.WebApi.Controllers
                     if (device.rows != null && device.rows.Count > 0)
                     {
                         List<JingGaiDevice> list = device.rows;
-                        JingGaiDevice deviceobj = list.Where(c=>c.device_id == device_id).FirstOrDefault();
+                        JingGaiDevice deviceobj = list.Where(c => c.device_id == device_id).FirstOrDefault();
                         device_name = deviceobj.device_name;
                         device_addr = deviceobj.install_addr;
                     }
@@ -231,13 +239,13 @@ namespace SZY.Platform.WebApi.Controllers
                         {
                             string alarm_item = parm.alarm_data[i].alarm_item;
                             string alarm_value = parm.alarm_data[i].alarm_value;
-                            var temp  = jgalarmlist.Where(c => c.alarm_item == alarm_item).FirstOrDefault();
+                            var temp = jgalarmlist.Where(c => c.alarm_item == alarm_item).FirstOrDefault();
                             string alarm_item_name = string.Empty;
                             if (temp != null)
                             {
                                 alarm_item_name = temp.alarm_item_name;
                             }
-                            
+
                             var threshold_conf = parm.alarm_data[i].threshold_conf;
                             if (threshold_conf != null && threshold_conf.Count > 0)
                             {
@@ -260,6 +268,7 @@ namespace SZY.Platform.WebApi.Controllers
                                         date1 = DateTime.Now.ToString()
                                     };
                                     await _service.AddJingGaiAlarm(obj);
+                                    _logger.LogWarning("JingGaiAlarm db插入成功1");
                                 }
                             }
                             else
@@ -267,15 +276,23 @@ namespace SZY.Platform.WebApi.Controllers
                                 JingGaiAlarm obj = new JingGaiAlarm()
                                 {
                                     device_id = device_id
-                                    ,device_type = int.Parse(device_type)
-                                    ,device_name = device_name
-                                    ,device_addr = device_addr
-                                    ,alarm_item = alarm_item
-                                    ,alarm_value = alarm_value
-                                    ,alarm_item_name = alarm_item_name
-                                    ,date1 = DateTime.Now.ToString()
+                                    ,
+                                    device_type = int.Parse(device_type)
+                                    ,
+                                    device_name = device_name
+                                    ,
+                                    device_addr = device_addr
+                                    ,
+                                    alarm_item = alarm_item
+                                    ,
+                                    alarm_value = alarm_value
+                                    ,
+                                    alarm_item_name = alarm_item_name
+                                    ,
+                                    date1 = DateTime.Now.ToString()
                                 };
                                 await _service.AddJingGaiAlarm(obj);
+                                _logger.LogWarning("JingGaiAlarm db插入成功2");
                             }
                         }
                     }
@@ -283,6 +300,7 @@ namespace SZY.Platform.WebApi.Controllers
             }
             catch (System.Exception ex)
             {
+                _logger.LogWarning("JingGaiAlarm" + ex.Message.ToString());
                 ret.errmsg = string.Format(
                     "异常信息:{0}",
                     ex.Message);
@@ -294,7 +312,7 @@ namespace SZY.Platform.WebApi.Controllers
         [HttpPost("SunWaterOpen")]
         public async Task<ActionResult<ApiResult>> SunWaterOpen()
         {
-            ApiResult ret = new ApiResult {  code = 0,msg="success" };
+            ApiResult ret = new ApiResult { code = 0, msg = "success" };
             try
             {
                 var mqttFactory = new MqttFactory();
@@ -411,7 +429,7 @@ namespace SZY.Platform.WebApi.Controllers
         //   { "carid":"沪a9999","cartype":1,"carcolor":2,"distance":300,"curx":36.3131600729,"cury":36.3131600729,"roadlane":2}
         //]   
 
-        public static async Task<List<carinfo>> GenerCar(int singlecarcount,int firststart,int offset1,int offset2)
+        public static async Task<List<carinfo>> GenerCar(int singlecarcount, int firststart, int offset1, int offset2)
         {
             List<carinfo> ret = new List<carinfo>();
             for (int i = 1; i <= 3; i++)//模拟三根车道
@@ -428,7 +446,7 @@ namespace SZY.Platform.WebApi.Controllers
                     string curcarid = caridfront + j.ToString();
                     string curnum = i.ToString() + j.ToString();
                     //模拟第一次该车辆的起点位置
-                    
+
                     if (j == 1)
                     {
                         distance = firstcarstart;
@@ -459,7 +477,7 @@ namespace SZY.Platform.WebApi.Controllers
             }
             return ret;
         }
-        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger,int times,int sleep,int rp,int dirc,int carcount,int cspeed,int firstcarloccation,int offset1,int offset2)
+        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger, int times, int sleep, int rp, int dirc, int carcount, int cspeed, int firstcarloccation, int offset1, int offset2)
         {
 
             var mqttFactory = new MqttFactory();
@@ -473,7 +491,7 @@ namespace SZY.Platform.WebApi.Controllers
 
                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-                List<carinfo> carinfolist = await GenerCar(carcount,firstcarloccation,offset1,offset2);
+                List<carinfo> carinfolist = await GenerCar(carcount, firstcarloccation, offset1, offset2);
                 int carspeed = cspeed;
                 for (int i = 0; i < times; i++)//时间间隔
                 {
@@ -496,7 +514,7 @@ namespace SZY.Platform.WebApi.Controllers
                             carinfolist[j].distance = carinfolist[j].distance + carspeed;
                         }
                     }
-                    ret.result = new transportresult() { roadpart = rp,direction = dirc, carinfo = carinfolist,camera = "K4+940" };
+                    ret.result = new transportresult() { roadpart = rp, direction = dirc, carinfo = carinfolist, camera = "K4+940" };
                     string payload = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ms");
 
                     string payloadstr = JsonConvert.SerializeObject(ret);
@@ -558,8 +576,8 @@ namespace SZY.Platform.WebApi.Controllers
     public class transportresult
     {
         public int roadpart { get; set; }
-        public string roadpartx { get; set;}
-        public string roadparty { get; set;}
+        public string roadpartx { get; set; }
+        public string roadparty { get; set; }
         public int direction { get; set; }
         public string camera { get; set; }
         public List<carinfo> carinfo { get; set; }
