@@ -1,26 +1,24 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using MSS.API.Common;
-using SZY.Platform.WebApi.Model;
-using SZY.Platform.WebApi.Service;
-using Quartz;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client.Options;
-using System.Threading;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+using MSS.API.Common;
 using Newtonsoft.Json;
-using System.Text;
-using MQTTnet.Client;
-using SZY.Platform.WebApi.Client;
-using Serilog.Core;
-using Serilog;
 using Newtonsoft.Json.Linq;
+using Quartz;
+using RestSharp;
+using Serilog;
+using Serilog.Core;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
+using SZY.Platform.WebApi.Client;
+using SZY.Platform.WebApi.Model;
+using SZY.Platform.WebApi.Service;
 
 namespace SZY.Platform.WebApi.Controllers
 {
@@ -329,7 +327,9 @@ namespace SZY.Platform.WebApi.Controllers
             JingGaiRet2 ret = new JingGaiRet2 { success = true };
             try
             {
-                var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
+                //AppID: kygjIYuuImUQzfiD
+                //AppSecret: ZpP2XVr6ILoByCWcgKxcTu3SRP5II0LE
+            var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
                 _logger2.Warning("JingGaiApi 来自:" + ip + "的请求 " + json);
 
                 JingGaiJson jsonobj = JsonConvert.DeserializeObject<JingGaiJson>(json.ToString());
@@ -403,6 +403,88 @@ namespace SZY.Platform.WebApi.Controllers
             }
             return ret;
         }
+
+
+        [HttpPost("JingGaiOpenApiDevice")]
+        public async Task<ActionResult<OpenApiDeviceObj>> JingGaiOpenApiDevice(int page_index,int page_size,string search_key)
+        {
+            OpenApiDeviceObj ret = new OpenApiDeviceObj { success = true };
+            try
+            {
+                //AppID: kygjIYuuImUQzfiD
+                //AppSecret: ZpP2XVr6ILoByCWcgKxcTu3SRP5II0LE
+                var client = new RestClient("https://things.cdjyl.com.cn:12000/api/v1/open_api/device?page_index="+ page_index + "&page_size="+ page_size + "&search_key="+ search_key);
+                client.Timeout = -1;
+                string timestamp = CurrentTimeStamp(true).ToString();
+                string rand = CreateRandCdkeys(16);
+                string appid = "kygjIYuuImUQzfiD";
+                string str = "app_id="+appid+"&nonce="+ rand + "&timestamp="+ timestamp;
+                string sign = HmacSHA256(str, "ZpP2XVr6ILoByCWcgKxcTu3SRP5II0LE");
+                _logger2.Warning("请求字符串:" + str);
+                _logger2.Warning("签名:" + sign);
+                var request = new RestRequest(Method.GET);
+                request.AddHeader("X-App-ID", appid);
+                request.AddHeader("X-Timestamp", timestamp);//"1662098451"
+                request.AddHeader("X-Nonce", rand);//"NMEtgrGslbA4QRD0"
+                request.AddHeader("X-Sign", sign);
+                IRestResponse response = client.Execute(request);
+                string content = response.Content;
+
+                ret = JsonConvert.DeserializeObject<OpenApiDeviceObj>(content);
+
+            }
+            catch (System.Exception ex)
+            {
+                _logger2.Warning("JingGaiOpenApiDevice " + ex.Message.ToString());
+                ret.success = false;
+                ret.err_code = -1;
+                ret.err_msg = string.Format(
+                    "异常信息:{0}",
+                    ex.Message);
+            }
+            return ret;
+        }
+
+        public static long CurrentTimeStamp(bool isMinseconds = false)
+         {
+             var ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            long times = Convert.ToInt64(isMinseconds ? ts.TotalMilliseconds : ts.TotalSeconds);
+             return times;
+        }
+
+
+        public static string CreateRandCdkeys(int x)
+        {
+            string[] codeSerial = new string[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
+            Random rand = new Random();
+            int temp = -1;
+            string cdKey = string.Empty;
+            for (int i = 0; i < 16; i++)
+            {
+                if (temp != -1)
+                {
+                    rand = new Random(x + i * temp * unchecked((int)DateTime.Now.Ticks));
+                }
+                int randIndex = rand.Next(0, 35);
+                temp = randIndex;
+                cdKey += codeSerial[randIndex];
+            }
+            return cdKey;
+        }
+
+        private string HmacSHA256(string secret, string signKey)
+        {
+            //HMACSHA1加密
+            HMACSHA256 hmacsha1 = new HMACSHA256();
+            hmacsha1.Key = System.Text.Encoding.UTF8.GetBytes(signKey);
+
+            byte[] dataBuffer = System.Text.Encoding.UTF8.GetBytes(secret);
+            byte[] hashBytes = hmacsha1.ComputeHash(dataBuffer);
+            String result = BitConverter.ToString(hashBytes);
+            result = result.Replace("-", "").ToLower();
+            return result;
+        }
+
 
         [HttpPost("SunWaterOpen")]
         public async Task<ActionResult<ApiResult>> SunWaterOpen()
@@ -633,6 +715,8 @@ namespace SZY.Platform.WebApi.Controllers
             }
         }
 
+
+
     }
 
 
@@ -689,6 +773,34 @@ namespace SZY.Platform.WebApi.Controllers
         public bool success { get; set; }
         public int err_code { get; set; }
         public string err_msg { get; set; }
+
+        public object obj { get; set; }
+    }
+
+    public class OpenApiDeviceObj : JingGaiRet2
+    {
+        public OpenApiDeviceData data { get; set; }
+    }
+
+    public class OpenApiDeviceData
+    {
+        public List<OpenApiDeviceEntity> data { get; set; }
+        public int total { get; set; }
+    }
+
+    public class OpenApiDeviceEntity
+    {
+        public int id { get; set; }
+        public string device_name { get; set; }
+        public string model_type { get; set; }
+        public string client_id { get; set; }
+        public string addr { get; set; }
+        public float longitude { get; set; }
+        public float latitude { get; set; }
+        public bool is_alarm { get; set; }
+        public Int64 active_at { get; set; }
+        public Int64 last_upload_at { get; set; }
+        public string status { get; set; }
     }
 
     public class JingGaiJson
