@@ -347,7 +347,7 @@ namespace SZY.Platform.WebApi.Controllers
                     case "alarm_data":
                         topic = "/jinggai/alarm_data";
                         OpenApiJingGai2Alarm json1 = JsonConvert.DeserializeObject<OpenApiJingGai2Alarm>(json.ToString());
-                        JingGai2AlarmToDB(json1);
+                         JingGai2AlarmToDB(json1);
                         _logger2.Warning("JingGai2AlarmToDB 成功 ");
                         break;
                     case "property":
@@ -409,7 +409,7 @@ namespace SZY.Platform.WebApi.Controllers
             return ret;
         }
 
-        private void JingGai2AlarmToDB(OpenApiJingGai2Alarm json)
+        private async void JingGai2AlarmToDB(OpenApiJingGai2Alarm json)
         {
             if (json != null)
             {
@@ -436,7 +436,7 @@ namespace SZY.Platform.WebApi.Controllers
                                 obj.alarm_settings_alarm_level = s.alarm_level;
                                 obj.alarm_settings_compare = s.compare;
                                 obj.alarm_settings_value = Convert.ToString(s.value);
-                                _jg2service.Save(obj);
+                                await _jg2service.Save(obj);
                             }
                         }
                     }
