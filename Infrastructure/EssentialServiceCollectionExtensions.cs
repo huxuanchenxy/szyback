@@ -41,6 +41,7 @@ namespace SZY.Platform.WebApi.Infrastructure
             services.AddTransient<IConstructionPlanMonthDetailService, ConstructionPlanMonthDetailService>();
             services.AddTransient<IWorkTaskService, WorkTaskService>();
             services.AddTransient<IWfprocessService, WfprocessService>();
+            services.AddTransient<IJingGai2AlarmService, JingGai2AlarmService>();
             services.AddTransient<IConstructionPlanMonthChartService, ConstructionPlanMonthChartService>();
 
             services.AddTransient<IMaintenanceService, MaintenanceService>();

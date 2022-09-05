@@ -36,11 +36,13 @@ namespace SZY.Platform.WebApi.Controllers
         private readonly MosquittoMqttClient client;
         private readonly Logger _logger1;
         private readonly Logger _logger2;
+        private readonly IJingGai2AlarmService _jg2service;
 
 
-        public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, MosquittoMqttClientService mqttclientservice)
+        public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, MosquittoMqttClientService mqttclientservice, IJingGai2AlarmService jg2service)
         {
             _service = service;
+            _jg2service = jg2service;
             this._schedulerFactory = schedulerFactory;
             _quart = quart;
             _accessor = accessor;
@@ -344,6 +346,9 @@ namespace SZY.Platform.WebApi.Controllers
                 {
                     case "alarm_data":
                         topic = "/jinggai/alarm_data";
+                        OpenApiJingGai2Alarm json1 = JsonConvert.DeserializeObject<OpenApiJingGai2Alarm>(json.ToString());
+                        JingGai2AlarmToDB(json1);
+                        _logger2.Warning("JingGai2AlarmToDB 成功 ");
                         break;
                     case "property":
                         topic = "/jinggai/property";
@@ -404,6 +409,41 @@ namespace SZY.Platform.WebApi.Controllers
             return ret;
         }
 
+        private void JingGai2AlarmToDB(OpenApiJingGai2Alarm json)
+        {
+            if (json != null)
+            {
+                if (json.payload != null && json.payload.Count > 0)
+                {
+                    foreach (var p in json.payload)
+                    {
+                        if (p.alarm_settings != null && p.alarm_settings.Count > 0)
+                        {
+                            
+                            foreach (var s in p.alarm_settings)
+                            {
+                                JingGai2Alarm obj = new JingGai2Alarm();
+                                obj.client_id = json.client_id;
+                                obj.model_type = json.model_type;
+                                obj.alarm_type = p.alarm_type;
+                                obj.alarm_level = p.alarm_level;
+                                obj.identifier = p.identifier;
+                                obj.value = Convert.ToString(p.value);
+                                obj.alarm_time = p.alarm_time;
+                                obj.alarm_settings_title = s.title;
+                                obj.alarm_settings_identifier = s.identifier;
+                                obj.alarm_settings_alarm_type = s.alarm_type;
+                                obj.alarm_settings_alarm_level = s.alarm_level;
+                                obj.alarm_settings_compare = s.compare;
+                                obj.alarm_settings_value = Convert.ToString(s.value);
+                                _jg2service.Save(obj);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
 
         [HttpPost("JingGaiOpenApiDevice")]
         public async Task<ActionResult<OpenApiDeviceObj>> JingGaiOpenApiDevice(int page_index,int page_size,string search_key)
@@ -427,7 +467,7 @@ namespace SZY.Platform.WebApi.Controllers
                 request.AddHeader("X-Timestamp", timestamp);//"1662098451"
                 request.AddHeader("X-Nonce", rand);//"NMEtgrGslbA4QRD0"
                 request.AddHeader("X-Sign", sign);
-                IRestResponse response = client.Execute(request);
+                IRestResponse response = await client.ExecuteAsync(request);
                 string content = response.Content;
 
                 ret = JsonConvert.DeserializeObject<OpenApiDeviceObj>(content);
@@ -801,6 +841,31 @@ namespace SZY.Platform.WebApi.Controllers
         public Int64 active_at { get; set; }
         public Int64 last_upload_at { get; set; }
         public string status { get; set; }
+    }
+
+    public class OpenApiJingGai2Alarm: JingGaiJson
+    {
+        public new List<OpenApiJingGai2AlarmPayload> payload { get; set; }
+    }
+
+    public class OpenApiJingGai2AlarmPayload
+    {
+        public string alarm_type { get; set; }
+        public string alarm_level { get; set; }
+        public string identifier { get; set; }
+        public dynamic value { get; set; }
+        public string alarm_time { get; set; }
+        public List<OpenApiJingGai2AlarmPayloadSettings> alarm_settings { get; set; }
+    }
+
+    public class OpenApiJingGai2AlarmPayloadSettings
+    {
+        public string title { get; set; }
+        public string identifier { get; set; }
+        public string alarm_type { get; set; }
+        public string alarm_level { get; set; }
+        public string compare { get; set; }
+        public dynamic value { get; set; }
     }
 
     public class JingGaiJson
