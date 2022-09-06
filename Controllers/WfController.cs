@@ -419,25 +419,31 @@ namespace SZY.Platform.WebApi.Controllers
                     {
                         if (p.alarm_settings != null && p.alarm_settings.Count > 0)
                         {
-                            
-                            foreach (var s in p.alarm_settings)
+                            var et = await GetJingGai2DeviceDetail(json.client_id);
+                            if (et.data != null)
                             {
-                                JingGai2Alarm obj = new JingGai2Alarm();
-                                obj.client_id = json.client_id;
-                                obj.model_type = json.model_type;
-                                obj.alarm_type = p.alarm_type;
-                                obj.alarm_level = p.alarm_level;
-                                obj.identifier = p.identifier;
-                                obj.value = Convert.ToString(p.value);
-                                obj.alarm_time = p.alarm_time;
-                                obj.alarm_settings_title = s.title;
-                                obj.alarm_settings_identifier = s.identifier;
-                                obj.alarm_settings_alarm_type = s.alarm_type;
-                                obj.alarm_settings_alarm_level = s.alarm_level;
-                                obj.alarm_settings_compare = s.compare;
-                                obj.alarm_settings_value = Convert.ToString(s.value);
-                                await _jg2service.Save(obj);
+                                foreach (var s in p.alarm_settings)
+                                {
+                                    JingGai2Alarm obj = new JingGai2Alarm();
+                                    obj.client_id = json.client_id;
+                                    obj.client_name = et.data.device_name;
+                                    obj.client_group = et.data.device_name.Substring(0, 3);//取100@的3位
+                                    obj.model_type = json.model_type;
+                                    obj.alarm_type = p.alarm_type;
+                                    obj.alarm_level = p.alarm_level;
+                                    obj.identifier = p.identifier;
+                                    obj.value = Convert.ToString(p.value);
+                                    obj.alarm_time = p.alarm_time;
+                                    obj.alarm_settings_title = s.title;
+                                    obj.alarm_settings_identifier = s.identifier;
+                                    obj.alarm_settings_alarm_type = s.alarm_type;
+                                    obj.alarm_settings_alarm_level = s.alarm_level;
+                                    obj.alarm_settings_compare = s.compare;
+                                    obj.alarm_settings_value = Convert.ToString(s.value);
+                                    await _jg2service.Save(obj);
+                                }
                             }
+                            
                         }
                     }
                 }
@@ -460,8 +466,8 @@ namespace SZY.Platform.WebApi.Controllers
                 string appid = "kygjIYuuImUQzfiD";
                 string str = "app_id="+appid+"&nonce="+ rand + "&timestamp="+ timestamp;
                 string sign = HmacSHA256(str, "ZpP2XVr6ILoByCWcgKxcTu3SRP5II0LE");
-                _logger2.Warning("请求字符串:" + str);
-                _logger2.Warning("签名:" + sign);
+                _logger2.Warning("JingGaiOpenApiDevice请求字符串:" + str);
+                _logger2.Warning("JingGaiOpenApiDevice签名:" + sign);
                 var request = new RestRequest(Method.GET);
                 request.AddHeader("X-App-ID", appid);
                 request.AddHeader("X-Timestamp", timestamp);//"1662098451"
@@ -482,6 +488,30 @@ namespace SZY.Platform.WebApi.Controllers
                     "异常信息:{0}",
                     ex.Message);
             }
+            return ret;
+        }
+
+        private async Task<OpenApiDeviceDetail> GetJingGai2DeviceDetail(string client_id)
+        {
+            OpenApiDeviceDetail ret = null;
+            var client = new RestClient("https://things.cdjyl.com.cn:12000/api/v1/open_api/device/detail?client_id="+ client_id);
+            client.Timeout = -1;
+            string timestamp = CurrentTimeStamp(true).ToString();
+            string rand = CreateRandCdkeys(16);
+            string appid = "kygjIYuuImUQzfiD";
+            string str = "app_id=" + appid + "&nonce=" + rand + "&timestamp=" + timestamp;
+            string sign = HmacSHA256(str, "ZpP2XVr6ILoByCWcgKxcTu3SRP5II0LE");
+            _logger2.Warning("GetJingGai2DeviceDetail请求字符串:" + str);
+            _logger2.Warning("GetJingGai2DeviceDetail签名:" + sign);
+            var request = new RestRequest(Method.GET);
+            request.AddHeader("X-App-ID", appid);
+            request.AddHeader("X-Timestamp", timestamp);//"1662098451"
+            request.AddHeader("X-Nonce", rand);//"NMEtgrGslbA4QRD0"
+            request.AddHeader("X-Sign", sign);
+            IRestResponse response = await client.ExecuteAsync(request);
+            string content = response.Content;
+
+            ret = JsonConvert.DeserializeObject<OpenApiDeviceDetail>(content);
             return ret;
         }
 
@@ -826,6 +856,11 @@ namespace SZY.Platform.WebApi.Controllers
     {
         public List<OpenApiDeviceEntity> data { get; set; }
         public int total { get; set; }
+    }
+
+    public class OpenApiDeviceDetail : JingGaiRet2
+    {
+        public OpenApiDeviceEntity data { get; set; }
     }
 
     public class OpenApiDeviceEntity

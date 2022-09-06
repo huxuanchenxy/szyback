@@ -21,6 +21,8 @@ namespace SZY.Platform.WebApi.Model
     {
         public int id { get; set; }
         public string client_id { get; set; }
+        public string client_group { get; set; }
+        public string client_name { get; set; }
         public string model_type { get; set; }
         public string alarm_type { get; set; }
         public string alarm_level { get; set; }
@@ -43,6 +45,8 @@ namespace SZY.Platform.WebApi.Model
         {
             Map(o => o.id).ToColumn("id");
             Map(o => o.client_id).ToColumn("client_id");
+            Map(o => o.client_group).ToColumn("client_group");
+            Map(o => o.client_name).ToColumn("client_name");
             Map(o => o.model_type).ToColumn("model_type");
             Map(o => o.alarm_type).ToColumn("alarm_type");
             Map(o => o.alarm_level).ToColumn("alarm_level");

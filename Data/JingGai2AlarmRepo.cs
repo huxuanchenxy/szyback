@@ -23,7 +23,7 @@ namespace SZY.Platform.WebApi.Data
         {
             return await WithConnection(async c =>
             {
-                string sql = $@" INSERT INTO `aisense`.`jinggai2_alarm`(`id`, `client_id`, `model_type`, `alarm_type`, `alarm_level`, `identifier`, `value`, `alarm_time`, `alarm_settings_title`, `alarm_settings_identifier`, `alarm_settings_alarm_type`, `alarm_settings_alarm_level`, `alarm_settings_compare`, `alarm_settings_value`,`date1`) VALUES (@id,@client_id,@model_type,@alarm_type,@alarm_level,@identifier,@value,@alarm_time,@alarm_settings_title,@alarm_settings_identifier,@alarm_settings_alarm_type,@alarm_settings_alarm_level,@alarm_settings_compare,@alarm_settings_value,@date1);
+                string sql = $@" INSERT INTO `aisense`.`jinggai2_alarm`(`id`, `client_id`, `model_type`, `alarm_type`, `alarm_level`, `identifier`, `value`, `alarm_time`, `alarm_settings_title`, `alarm_settings_identifier`, `alarm_settings_alarm_type`, `alarm_settings_alarm_level`, `alarm_settings_compare`, `alarm_settings_value`,`date1`,`client_group`,`client_name`) VALUES (@id,@client_id,@model_type,@alarm_type,@alarm_level,@identifier,@value,@alarm_time,@alarm_settings_title,@alarm_settings_identifier,@alarm_settings_alarm_type,@alarm_settings_alarm_level,@alarm_settings_compare,@alarm_settings_value,@date1,@client_group,@client_name);
 
                     ";
                 sql += "SELECT LAST_INSERT_ID() ";
