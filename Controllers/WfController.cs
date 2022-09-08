@@ -36,6 +36,7 @@ namespace SZY.Platform.WebApi.Controllers
         private readonly MosquittoMqttClient client;
         private readonly Logger _logger1;
         private readonly Logger _logger2;
+        private readonly Logger _logger3;
         private readonly IJingGai2AlarmService _jg2service;
 
 
@@ -71,6 +72,18 @@ namespace SZY.Platform.WebApi.Controllers
         //.MinimumLevel.Override("Microsoft", LogEventLevel.)
         //.Enrich.FromLogContext()
         .WriteTo.RollingFile(@"c:\\JingGaiLogs\log.txt")
+        .CreateLogger();
+
+
+            _logger3 = new LoggerConfiguration()
+#if DEBUG
+        .MinimumLevel.Debug()
+#else
+        .MinimumLevel.Information()
+#endif
+        //.MinimumLevel.Override("Microsoft", LogEventLevel.)
+        //.Enrich.FromLogContext()
+        .WriteTo.RollingFile(@"c:\\JingGaiLogs\WXlog.txt")
         .CreateLogger();
         }
 
