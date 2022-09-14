@@ -9,8 +9,12 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Serilog;
+using Serilog.Core;
 using SZY.Platform.WebApi.Helper;
+using SZY.Platform.WebApi.Model;
 
 namespace SZY.Platform.WebApi.Controllers
 {
@@ -18,6 +22,22 @@ namespace SZY.Platform.WebApi.Controllers
     [ApiController]
     public class WxController : ControllerBase
     {
+
+        private readonly Logger _logger3;
+
+        public WxController()
+        {
+            _logger3 = new LoggerConfiguration()
+#if DEBUG
+        .MinimumLevel.Debug()
+#else
+        .MinimumLevel.Information()
+#endif
+        //.MinimumLevel.Override("Microsoft", LogEventLevel.)
+        //.Enrich.FromLogContext()
+        .WriteTo.RollingFile(@"c:\\JingGaiLogs\WXlog.txt")
+        .CreateLogger();
+        }
         /// <summary>
         /// 生成签名
         /// </summary>
@@ -183,70 +203,91 @@ namespace SZY.Platform.WebApi.Controllers
         {
             string OpenID = "oXx6O6e8y3swFXrWtY9CjK9HF0kM";
             //Appid
-            string appid = "wxfc879eb996df5996";
+            string appid = "wxfc879eb996df5996";//wxfc879eb996df5996  测试号
             //secret
-            string secret = "9b1d01dd259426fe6f09b1244a971294";
-            if (OpenID != "")
+            string secret = "9b1d01dd259426fe6f09b1244a971294";//9b1d01dd259426fe6f09b1244a971294 测试号密码
+
+            string ret = string.Empty;
+
+            try
             {
-                string url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + appid + "&secret=" + secret + "";
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = "GET";
-                request.ContentType = "text/html;charset=UTF-8";
-                string jsonData = "";
-                using (HttpWebResponse response1 = (HttpWebResponse)request.GetResponse())
+
+                if (OpenID != "")
                 {
-                    using (StreamReader sr = new StreamReader(response1.GetResponseStream(), Encoding.UTF8))
+                    string url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + appid + "&secret=" + secret + "";
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                    request.Method = "GET";
+                    request.ContentType = "text/html;charset=UTF-8";
+                    string jsonData = "";
+                    using (HttpWebResponse response1 = (HttpWebResponse)request.GetResponse())
                     {
-                        jsonData = sr.ReadToEnd();
-                        sr.Close();
-                    }
-                    response1.Close();
-                }
-                if (jsonData != "")
-                {
-                    string jsonString = jsonData;
-                    JObject json = JObject.Parse(jsonString);
-                    string access_token = json["access_token"].ToString();
-
-                    string str = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + access_token;
-
-                    //json参数，传入对应的值                                                                           
-                    string jsonParam = "{\"touser\": \"" + OpenID + "\",\"template_id\":\"" + "Dg_fEVDVitwBpyWLm5s_lQ5XAG__CHxK8uriIRAFTqY" + "\",\"data\": {\"cols1\": { \"value\": \"1111\"}," +
-                        "\"cols2\": { \"value\": \"2222\"}," +
-                          "\"cols3\": { \"value\": \"333\"}," +
-                            "\"cols4\": { \"value\": \"4444\"}}}";
-
-                    HttpWebRequest requests = (HttpWebRequest)WebRequest.Create(str);
-                    requests.Method = "POST";
-                    requests.Timeout = 20000;
-                    requests.ContentType = "application/json;charset=UTF-8";
-                    byte[] byteData = Encoding.UTF8.GetBytes(jsonParam);
-                    int length = byteData.Length;
-                    requests.ContentLength = length;
-
-                    using (Stream writer = requests.GetRequestStream())
-                    {
-                        writer.Write(byteData, 0, length);
-                        writer.Close();
-                    }
-
-                    string jsonStrings = string.Empty;
-                    using (HttpWebResponse responses = (HttpWebResponse)requests.GetResponse())
-                    {
-                        using (Stream streams = responses.GetResponseStream())
+                        using (StreamReader sr = new StreamReader(response1.GetResponseStream(), Encoding.UTF8))
                         {
-                            using (StreamReader readers = new StreamReader(streams, System.Text.Encoding.UTF8))
+                            jsonData = sr.ReadToEnd();
+                            sr.Close();
+                        }
+                        response1.Close();
+                    }
+                    if (jsonData != "")
+                    {
+                        string jsonString = jsonData;
+                        JObject json = JObject.Parse(jsonString);
+                        string access_token = json["access_token"].ToString();
+                        ret = access_token;
+                        string str = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + access_token;
+
+                        //json参数，传入对应的值                                                                           
+                        //string jsonParam = "{\"touser\": \"" + OpenID + "\",\"template_id\":\"" + "VKhqNtMKtiI_Mi-p_P7YnFZR70BLwGsW8ywx9uFlXz0" + "\",\"url\":\"" + "http://weixin.qq.com/download" + "\",\"data\": {\"cols1\": { \"value\": \"1111\"}," +
+                        //    "\"cols2\": { \"value\": \"2222\"}," +
+                        //      "\"cols3\": { \"value\": \"333\"}," +
+                        //        "\"cols4\": { \"value\": \"" + DateTime.Now.ToString() + "\"}}}";
+
+                        //string jsonParam = "{\"touser\": \"" + OpenID + "\",\"template_id\":\"" + "6ngf_w5yemfU0lZrDW2USzqWZQDGPg4oOXfp4LlnDaY" + "\",\"url\":\"" + "http://weixin.qq.com/download" + "\",\"data\": {\"cols1\": { \"value\": \"1111\"}," +
+                        //    "\"cols2\": { \"value\": \"2222\"}," +
+                        //      "\"cols3\": { \"value\": \"333\"}}}";
+
+                        //string jsonParam = "{\"touser\": \"" + OpenID + "\", 	\"template_id\": \"QB6AJFWAZK4UZTgY-UPm1xTS45y4_To4wCsluPv6fzM\", 	\"url\": \"http://weixin.qq.com/download\", 	\"miniprogram\": { 		\"appid\": \"xiaochengxuappid12345\", 		\"pagepath\": \"index?foo=bar\" 	}, \"data\": { 		\"first\": \"" + DateTime.Now.ToString() + "\" 	} }";
+
+                        WXRoot wxroot = new WXRoot() { touser = OpenID, template_id = "QB6AJFWAZK4UZTgY-UPm1xTS45y4_To4wCsluPv6fzM", url = "http://weixin.qq.com/download", data = new WXData() { first = new WXFirst() { value = "恭喜你购买成功！" + DateTime.Now.ToString(), color = "#440033" }, keyword1 = new WXKeyword1() { value = "aasss" } } };
+                        string jsonParam = JsonConvert.SerializeObject(wxroot);
+
+                        HttpWebRequest requests = (HttpWebRequest)WebRequest.Create(str);
+                        requests.Method = "POST";
+                        requests.Timeout = 20000;
+                        requests.ContentType = "application/json;charset=UTF-8";
+                        byte[] byteData = Encoding.UTF8.GetBytes(jsonParam);
+                        int length = byteData.Length;
+                        requests.ContentLength = length;
+
+                        using (Stream writer = requests.GetRequestStream())
+                        {
+                            writer.Write(byteData, 0, length);
+                            writer.Close();
+                        }
+
+                        string jsonStrings = string.Empty;
+                        using (HttpWebResponse responses = (HttpWebResponse)requests.GetResponse())
+                        {
+                            using (Stream streams = responses.GetResponseStream())
                             {
-                                jsonStrings = readers.ReadToEnd();
-                                responses.Close();
-                                streams.Close();
-                                readers.Close();
+                                using (StreamReader readers = new StreamReader(streams, System.Text.Encoding.UTF8))
+                                {
+                                    jsonStrings = readers.ReadToEnd();
+                                    _logger3.Warning("微信请求成功：" + jsonStrings);
+                                    responses.Close();
+                                    streams.Close();
+                                    readers.Close();
+                                }
                             }
                         }
                     }
                 }
             }
-            return "";
+            catch (Exception ex)
+            {
+                _logger3.Warning("微信请求报错:" + ex.Message.ToString());
+            }
+            return ret;
         }
 
 
