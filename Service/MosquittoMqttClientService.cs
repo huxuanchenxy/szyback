@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using MQTTnet.Client.Options;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,10 +18,12 @@ namespace SZY.Platform.WebApi.Service
     {
         private readonly MosquittoMqttClient client;
         private ITransportCameraRepo<TransportCarCameraToTunnel> _repo;
+        private readonly IConfiguration _configuration;
 
-        public MosquittoMqttClientService(IMqttClientOptions options, ITransportCameraRepo<TransportCarCameraToTunnel> repo)
+        public MosquittoMqttClientService(IMqttClientOptions options, ITransportCameraRepo<TransportCarCameraToTunnel> repo, IConfiguration configuration)
         {
-            client = new MosquittoMqttClient();
+            _configuration = configuration;
+            client = new MosquittoMqttClient(_configuration);
             _repo = repo;
         }
 

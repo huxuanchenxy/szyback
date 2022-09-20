@@ -15,7 +15,7 @@ namespace SZY.Platform.WebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public string path { get; set; }
+        public string pagepath { get; set; }
     }
 
     public class WXFirst

@@ -203,9 +203,9 @@ namespace SZY.Platform.WebApi.Controllers
         {
             string OpenID = "oXx6O6e8y3swFXrWtY9CjK9HF0kM";
             //Appid
-            string appid = "wxfc879eb996df5996";//wxfc879eb996df5996  测试号
+            string appid = "wx2ad82f5d4f69022e";//wxfc879eb996df5996  测试号
             //secret
-            string secret = "9b1d01dd259426fe6f09b1244a971294";//9b1d01dd259426fe6f09b1244a971294 测试号密码
+            string secret = "99edc8041bfc01e5d17863426fd8aaf3";//9b1d01dd259426fe6f09b1244a971294 测试号密码
 
             string ret = string.Empty;
 
@@ -248,7 +248,7 @@ namespace SZY.Platform.WebApi.Controllers
 
                         //string jsonParam = "{\"touser\": \"" + OpenID + "\", 	\"template_id\": \"QB6AJFWAZK4UZTgY-UPm1xTS45y4_To4wCsluPv6fzM\", 	\"url\": \"http://weixin.qq.com/download\", 	\"miniprogram\": { 		\"appid\": \"xiaochengxuappid12345\", 		\"pagepath\": \"index?foo=bar\" 	}, \"data\": { 		\"first\": \"" + DateTime.Now.ToString() + "\" 	} }";
 
-                        WXRoot wxroot = new WXRoot() { touser = OpenID, template_id = "QB6AJFWAZK4UZTgY-UPm1xTS45y4_To4wCsluPv6fzM", url = "http://weixin.qq.com/download", data = new WXData() { first = new WXFirst() { value = "恭喜你购买成功！" + DateTime.Now.ToString(), color = "#440033" }, keyword1 = new WXKeyword1() { value = "aasss" } } };
+                        WXRoot wxroot = new WXRoot() { touser = OpenID, template_id = "QB6AJFWAZK4UZTgY-UPm1xTS45y4_To4wCsluPv6fzM", url = "http://weixin.qq.com/download", miniprogram = new WXMiniprogram() { appid = "wx73fa94f9c3741408" }, data = new WXData() { first = new WXFirst() { value = "恭喜你购买成功！" + DateTime.Now.ToString(), color = "#440033" }, keyword1 = new WXKeyword1() { value = "aasss" } } };
                         string jsonParam = JsonConvert.SerializeObject(wxroot);
 
                         HttpWebRequest requests = (HttpWebRequest)WebRequest.Create(str);

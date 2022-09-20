@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client.Options;
@@ -33,14 +34,13 @@ namespace SZY.Platform.WebApi.Controllers
         private readonly IWorkTaskService _service;
         private readonly Microsoft.Extensions.Logging.ILogger _logger;
         private MosquittoMqttClientService _mqttclientservice;
-        private readonly MosquittoMqttClient client;
         private readonly Logger _logger1;
         private readonly Logger _logger2;
         private readonly Logger _logger3;
         private readonly IJingGai2AlarmService _jg2service;
+        private readonly IConfiguration _configuration;
 
-
-        public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, MosquittoMqttClientService mqttclientservice, IJingGai2AlarmService jg2service)
+        public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, MosquittoMqttClientService mqttclientservice, IJingGai2AlarmService jg2service, IConfiguration configuration)
         {
             _service = service;
             _jg2service = jg2service;
@@ -49,8 +49,7 @@ namespace SZY.Platform.WebApi.Controllers
             _accessor = accessor;
             _logger = logger;
             _mqttclientservice = mqttclientservice;
-            client = new MosquittoMqttClient();
-
+            _configuration = configuration;
 
             _logger1 = new LoggerConfiguration()
 #if DEBUG
@@ -391,7 +390,7 @@ namespace SZY.Platform.WebApi.Controllers
                 {
                     var mqttClientOptions = new MqttClientOptionsBuilder()
                         //.WithTcpServer("broker.hivemq.com")
-                        .WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
+                        .WithWebSocketServer("ws://"+_configuration["MQTTSet: Ip"].ToString()+":8083/mqtt")
                         .Build();
 
                     await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
@@ -581,7 +580,7 @@ namespace SZY.Platform.WebApi.Controllers
                 {
                     var mqttClientOptions = new MqttClientOptionsBuilder()
                         //.WithTcpServer("broker.hivemq.com")
-                        .WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
+                        .WithWebSocketServer("ws://" + _configuration["MQTTSet: Ip"].ToString() + ":8083/mqtt")
                         .Build();
 
                     await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
@@ -622,7 +621,7 @@ namespace SZY.Platform.WebApi.Controllers
                 {
                     var mqttClientOptions = new MqttClientOptionsBuilder()
                         //.WithTcpServer("broker.hivemq.com")
-                        .WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
+                        .WithWebSocketServer("ws://" + _configuration["MQTTSet: Ip"].ToString() + ":8083/mqtt")
                         .Build();
 
                     await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
@@ -649,7 +648,7 @@ namespace SZY.Platform.WebApi.Controllers
             }
             return ret;
         }
-        public static async Task Publish_Application_Message()
+        private async Task Publish_Application_Message()
         {
             /*
              * This sample pushes a simple application message including a topic and a payload.
@@ -666,7 +665,7 @@ namespace SZY.Platform.WebApi.Controllers
             {
                 var mqttClientOptions = new MqttClientOptionsBuilder()
                     //.WithTcpServer("broker.hivemq.com")
-                    .WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
+                    .WithWebSocketServer("ws://" + _configuration["MQTTSet: Ip"].ToString() + ":8083/mqtt")
                     .Build();
 
                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
@@ -689,7 +688,7 @@ namespace SZY.Platform.WebApi.Controllers
         //   { "carid":"沪a9999","cartype":1,"carcolor":2,"distance":300,"curx":36.3131600729,"cury":36.3131600729,"roadlane":2}
         //]   
 
-        public static async Task<List<carinfo>> GenerCar(int singlecarcount, int firststart, int offset1, int offset2)
+        private async Task<List<carinfo>> GenerCar(int singlecarcount, int firststart, int offset1, int offset2)
         {
             List<carinfo> ret = new List<carinfo>();
             for (int i = 1; i <= 3; i++)//模拟三根车道
@@ -737,7 +736,7 @@ namespace SZY.Platform.WebApi.Controllers
             }
             return ret;
         }
-        public static async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger, int times, int sleep, int rp, int dirc, int carcount, int cspeed, int firstcarloccation, int offset1, int offset2)
+        private async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger, int times, int sleep, int rp, int dirc, int carcount, int cspeed, int firstcarloccation, int offset1, int offset2)
         {
 
             var mqttFactory = new MqttFactory();
@@ -746,7 +745,7 @@ namespace SZY.Platform.WebApi.Controllers
             {
                 var mqttClientOptions = new MqttClientOptionsBuilder()
                     //.WithTcpServer("broker.hivemq.com")
-                    .WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
+                    .WithWebSocketServer("ws://" + _configuration["MQTTSet: Ip"].ToString() + ":8083/mqtt")
                     .Build();
 
                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);

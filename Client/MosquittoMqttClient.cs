@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
@@ -39,10 +40,11 @@ namespace SZY.Platform.WebApi.Client
         private List<TransportCarCameraToTunnel> cameralist;
 
         private ITransportCameraRepo<TransportCarCameraToTunnel> _repo;
+        private readonly IConfiguration _configuration;
 
-        public MosquittoMqttClient()
+        public MosquittoMqttClient(IConfiguration configuration)
         {
-
+            _configuration = configuration;
             _logger = new LoggerConfiguration()
 #if DEBUG
         .MinimumLevel.Debug()
@@ -59,7 +61,7 @@ namespace SZY.Platform.WebApi.Client
 
 
             Options = new MqttClientOptionsBuilder()
-                    .WithTcpServer("47.101.220.2", 1883)
+                    .WithTcpServer(_configuration["MQTTSet:Ip"].ToString(), 1883)
                     //.WithWebSocketServer("ws://47.101.220.2:8083/mqtt")
                     .WithClientId("transportzdh" + Guid.NewGuid().ToString("D"))
                     .WithCredentials("admin", "public")

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using MQTTnet.Client.Options;
 using SZY.Platform.WebApi.Options;
 using SZY.Platform.WebApi.Client;
+using Microsoft.Extensions.Configuration;
 
 namespace SZY.Platform.WebApi.Infrastructure
 {
@@ -49,12 +50,19 @@ namespace SZY.Platform.WebApi.Infrastructure
             services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
 
             services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();
+
+            var builder = new ConfigurationBuilder()
+    //.SetBasePath("path here") //<--You would need to set the path
+    .AddJsonFile("appsettings.json"); //or what ever file you have the settings
+
+            IConfiguration _configuration = builder.Build();
+
             services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
             {
                 aspOptionBuilder
                 .WithCredentials("admin", "public")
                 .WithClientId("zdh" + Guid.NewGuid().ToString("D"))
-                .WithTcpServer("47.101.220.2", 1883);
+                .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
             });
 
             //services.AddSingleton<MosquittoMqttClientService>();
