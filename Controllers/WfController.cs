@@ -359,8 +359,15 @@ namespace SZY.Platform.WebApi.Controllers
                     case "alarm_data":
                         topic = "/jinggai/alarm_data";
                         OpenApiJingGai2Alarm json1 = JsonConvert.DeserializeObject<OpenApiJingGai2Alarm>(json.ToString());
-                         JingGai2AlarmToDB(json1);
-                        _logger2.Warning("JingGai2AlarmToDB 成功 ");
+                        try
+                        {
+                            JingGai2AlarmToDB(json1);
+                            _logger2.Warning("JingGai2AlarmToDB 成功 ");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger2.Warning("JingGai2AlarmToDB 失败: " + ex.Message.ToString());
+                        }
                         break;
                     case "property":
                         topic = "/jinggai/property";
@@ -390,7 +397,7 @@ namespace SZY.Platform.WebApi.Controllers
                 {
                     var mqttClientOptions = new MqttClientOptionsBuilder()
                         //.WithTcpServer("broker.hivemq.com")
-                        .WithWebSocketServer("ws://"+_configuration["MQTTSet: Ip"].ToString()+":8083/mqtt")
+                        .WithWebSocketServer("ws://"+_configuration["MQTTSet:Ip"].ToString()+":8083/mqtt")
                         .Build();
 
                     await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
@@ -439,7 +446,9 @@ namespace SZY.Platform.WebApi.Controllers
                                     JingGai2Alarm obj = new JingGai2Alarm();
                                     obj.client_id = json.client_id;
                                     obj.client_name = et.data.device_name;
-                                    obj.client_group = et.data.device_name.Substring(0, 3);//取100@的3位
+                                    var curgroup = et.data.groups;
+                                    //obj.client_group = et.data.device_name.Substring(0, 3);//取100@的3位
+                                    obj.client_group = curgroup != null && curgroup.Count > 0 ? curgroup[0].group_name : "";
                                     obj.model_type = json.model_type;
                                     obj.alarm_type = p.alarm_type;
                                     obj.alarm_level = p.alarm_level;
@@ -580,7 +589,7 @@ namespace SZY.Platform.WebApi.Controllers
                 {
                     var mqttClientOptions = new MqttClientOptionsBuilder()
                         //.WithTcpServer("broker.hivemq.com")
-                        .WithWebSocketServer("ws://" + _configuration["MQTTSet: Ip"].ToString() + ":8083/mqtt")
+                        .WithWebSocketServer("ws://" + _configuration["MQTTSet:Ip"].ToString() + ":8083/mqtt")
                         .Build();
 
                     await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
@@ -621,7 +630,7 @@ namespace SZY.Platform.WebApi.Controllers
                 {
                     var mqttClientOptions = new MqttClientOptionsBuilder()
                         //.WithTcpServer("broker.hivemq.com")
-                        .WithWebSocketServer("ws://" + _configuration["MQTTSet: Ip"].ToString() + ":8083/mqtt")
+                        .WithWebSocketServer("ws://" + _configuration["MQTTSet:Ip"].ToString() + ":8083/mqtt")
                         .Build();
 
                     await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
@@ -665,7 +674,7 @@ namespace SZY.Platform.WebApi.Controllers
             {
                 var mqttClientOptions = new MqttClientOptionsBuilder()
                     //.WithTcpServer("broker.hivemq.com")
-                    .WithWebSocketServer("ws://" + _configuration["MQTTSet: Ip"].ToString() + ":8083/mqtt")
+                    .WithWebSocketServer("ws://" + _configuration["MQTTSet:Ip"].ToString() + ":8083/mqtt")
                     .Build();
 
                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
@@ -745,7 +754,7 @@ namespace SZY.Platform.WebApi.Controllers
             {
                 var mqttClientOptions = new MqttClientOptionsBuilder()
                     //.WithTcpServer("broker.hivemq.com")
-                    .WithWebSocketServer("ws://" + _configuration["MQTTSet: Ip"].ToString() + ":8083/mqtt")
+                    .WithWebSocketServer("ws://" + _configuration["MQTTSet:Ip"].ToString() + ":8083/mqtt")
                     .Build();
 
                 await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
@@ -888,6 +897,13 @@ namespace SZY.Platform.WebApi.Controllers
         public Int64 active_at { get; set; }
         public Int64 last_upload_at { get; set; }
         public string status { get; set; }
+        public List<OpenApiDeviceGroup> groups { get; set; }
+    }
+
+    public class OpenApiDeviceGroup
+    {
+        public int id { get; set; }
+        public string group_name { get; set; }
     }
 
     public class OpenApiJingGai2Alarm: JingGaiJson
