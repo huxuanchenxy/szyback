@@ -59,7 +59,7 @@ namespace SZY.Platform.WebApi.Service
 
 
             var mqttFactory = new MqttFactory();
-            string payloadstr = "{\"A02\":100000,\"res\":\"123\"}";
+            string payloadstr = "{\"A02BBB\":9999,\"res\":\"123\"}";
             using (var mqttClient = mqttFactory.CreateMqttClient())
             {
                 var mqttClientOptions = new MqttClientOptionsBuilder()
