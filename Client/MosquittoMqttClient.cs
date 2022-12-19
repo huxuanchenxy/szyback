@@ -67,7 +67,7 @@ namespace SZY.Platform.WebApi.Client
                     .WithCredentials("admin", "public")
                     .Build();
             client = new MqttFactory().CreateMqttClient();
-            client.UseApplicationMessageReceivedHandler(OnMessage);
+            client.UseApplicationMessageReceivedHandler(OnMessage2);
         }
 
         /// <summary>
@@ -75,11 +75,16 @@ namespace SZY.Platform.WebApi.Client
         /// </summary>
         private void GenarateCamera()
         {
+
             cameralist = new List<TransportCarCameraToTunnel>();
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+760", offset = 760, roadpart = 2, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+820", offset = 820, roadpart = 2, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+880", offset = 880, roadpart = 2, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K4+940", offset = 940, roadpart = 2, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+007", offset = 7, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+100", offset = 100, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+175", offset = 175, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+250", offset = 250, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+320", offset = 320, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+390", offset = 390, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+540", offset = 540, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+610", offset = 610, roadpart = 28, direction = 1 });
 
 
         }
@@ -119,7 +124,7 @@ namespace SZY.Platform.WebApi.Client
             //payload.status = "Online";
             //payload.connectedOn = DateTime.Now.ToString();
 
-            await client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("transport/car").Build());
+            await client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("transport/offline/car16").Build());
 
             if (!client.IsConnected)
             {
@@ -182,6 +187,63 @@ namespace SZY.Platform.WebApi.Client
             }
         }
 
+
+        //长江隧桥8+8离线数据
+        public virtual async void OnMessage2(MqttApplicationMessageReceivedEventArgs eventArgs)
+        {
+            try
+            {
+                var jsonPayload = Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
+                var topic = eventArgs.ApplicationMessage.Topic;
+
+                int pxlong = 1920;//模拟一个屏幕的像素
+                int cmlong = 760;//k28同济选择的最后一个摄像头，实际占的米
+                //var sss = _repo.GetPageList();
+                if (topic.Contains("transport/offline/car16"))
+                {
+                    //Console.WriteLine("Nova mensagem recebida do broker: ");
+                    //Console.WriteLine(jsonPayload);
+                    _logger.Warning("transport/offline/car16");
+                    _logger.Warning(jsonPayload);
+                    //var payload = JsonSerializer.Deserialize<TransportCarRoot>(jsonPayload);
+                    var obj = JsonConvert.DeserializeObject<TransportCarRoot>(jsonPayload);
+                    if (obj.result != null)
+                    {
+                        var camera = obj.result.camera;
+                        if (camera != null)
+                        {
+                            var curcamera = cameralist.Where(c => c.camera == obj.result.camera).FirstOrDefault();
+                            if (curcamera != null)
+                            {
+                                //int curoffset = curcamera.offset * pxlong / cmlong;//北横通道的换算
+                                int curdirection = curcamera.direction;
+                                int curroadpart = curcamera.roadpart;
+                                obj.result.direction = curdirection;
+                                obj.result.roadpart = curroadpart;
+                                if (obj.result.carinfo != null && obj.result.carinfo.Count > 0)
+                                {
+                                    for (int i = 0; i < obj.result.carinfo.Count; i++)
+                                    {
+                                        int curdistance = (curcamera.offset + obj.result.carinfo[i].distance) * pxlong / cmlong;//实际在760m中的米数转换成1920里的像素，举例，如果正好是k28+007 distance同济传来的是0，那就应该是屏幕中17.68像素的位置
+                                        obj.result.carinfo[i].distance = curdistance;
+                                    }
+                                }
+
+                                await PublishMessageAsync(@"transport/car/front", JsonConvert.SerializeObject(obj), false, 0);
+                                _logger.Warning("transport/car/front");
+                                _logger.Warning(JsonConvert.SerializeObject(obj));
+                            }
+
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Erro ao tentar ler a msnsagem: " + ex.Message);
+                //throw;
+            }
+        }
 
         public Task StopClientAsync()
         {
