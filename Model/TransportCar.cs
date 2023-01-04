@@ -32,6 +32,7 @@ namespace SZY.Platform.WebApi.Model
     {
         public int id { get; set; }
         public int offset { get; set; }
+        public int offsetsingle { get; set; }
         public string camera { get; set; }
         public int roadpart { get; set; }
         public int direction { get; set; }
@@ -72,12 +73,12 @@ namespace SZY.Platform.WebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public int roadpartx { get; set; }
+        public float roadpartx { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int roadparty { get; set; }
+        public float roadparty { get; set; }
 
         /// <summary>
         /// 
@@ -131,12 +132,12 @@ namespace SZY.Platform.WebApi.Model
         /// <summary>
         /// 
         /// </summary>
-        public int curx { get; set; }
+        public float curx { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public int cury { get; set; }
+        public float cury { get; set; }
 
     }
 
