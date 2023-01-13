@@ -75,6 +75,15 @@ namespace SZY.Platform.WebApi.Client
         /// </summary>
         private void GenarateCamera()
         {
+            //找这个开services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
+            //services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();
+            //services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
+            //{
+            //    aspOptionBuilder
+            //    .WithCredentials("admin", "public")
+            //    .WithClientId("zdh" + Guid.NewGuid().ToString("D"))
+            //    .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
+            //});
 
             cameralist = new List<TransportCarCameraToTunnel>();
             cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+020", offset = 20, offsetsingle  = 80, roadpart = 28, direction = 1 });//后面一个摄像头减去当前摄像头的距离
