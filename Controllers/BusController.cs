@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -20,7 +21,7 @@ using SZY.Platform.WebApi.Model;
 
 namespace SZY.Platform.WebApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]")]//8036
     [ApiController]
     public class BusController : ControllerBase
     {
@@ -52,7 +53,10 @@ namespace SZY.Platform.WebApi.Controllers
             {
                 var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
                 _logger.Warning("PostAiAlarm 来自:" + ip + "的请求   obj: " + JsonConvert.SerializeObject(parm));
-
+                if (parm != null)
+                {
+                    Base64toImg(parm.alarm_picture);
+                }
             }
             catch (System.Exception ex)
             {
@@ -62,6 +66,38 @@ namespace SZY.Platform.WebApi.Controllers
                     ex.Message);
             }
             return ret;
+        }
+
+        [NonAction]
+        private void Base64toImg(string base64str)
+        {
+            //站点文件目录
+            string fileDir = @"F:\netcontrol\project\2022\szy\upload\";
+            //文件名称
+            string fileName = "chezai" + DateTime.Now.ToString("yyyyMMddHHmmssff");
+            //保存文件所在站点位置
+            string filePath = Path.Combine(fileDir, fileName);
+
+            if (!System.IO.Directory.Exists(fileDir))
+                System.IO.Directory.CreateDirectory(fileDir);
+
+
+
+            //将Base64String转为图片并保存
+            byte[] arr2 = Convert.FromBase64String(base64str);
+            using (MemoryStream ms2 = new MemoryStream(arr2))
+            {
+                //System.Drawing.Bitmap bmp2 = new System.Drawing.Bitmap(ms2);
+                ////bmp2.Save(filePath + ".jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                ////bmp2.Save(filePath + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                ////bmp2.Save(filePath + ".gif", System.Drawing.Imaging.ImageFormat.Gif);
+                //bmp2.Save(filePath + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+                Bitmap bmpTemp = new Bitmap(ms2);
+                Bitmap bmp = new Bitmap(bmpTemp);
+                bmpTemp.Dispose();
+                bmp.Save(filePath + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
         }
 
 
