@@ -33,6 +33,7 @@ namespace SZY.Platform.WebApi.Model
         public int id { get; set; }
         public int offset { get; set; }
         public int offsetsingle { get; set; }
+        public int offsetsinglepx { get; set; }
         public string camera { get; set; }
         public int roadpart { get; set; }
         public int direction { get; set; }

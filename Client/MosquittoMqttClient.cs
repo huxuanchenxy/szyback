@@ -84,27 +84,31 @@ namespace SZY.Platform.WebApi.Client
             //    .WithClientId("zdh" + Guid.NewGuid().ToString("D"))
             //    .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
             //});
-
+            int k28 = int.Parse(_configuration["MQTTSet:K2right"].ToString());
+            int k35 = int.Parse(_configuration["MQTTSet:K2left"].ToString());
+            int pxlong = int.Parse(_configuration["MQTTSet:Pxlong"].ToString());
             cameralist = new List<TransportCarCameraToTunnel>();
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+020", offset = 20, offsetsingle  = 80, roadpart = 28, direction = 1 });//后面一个摄像头减去当前摄像头的距离
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+100", offset = 100, offsetsingle = 75, roadpart = 28, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+175", offset = 175, offsetsingle = 75, roadpart = 28, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+250", offset = 250, offsetsingle = 70, roadpart = 28, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+320", offset = 320, offsetsingle = 70, roadpart = 28, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+390", offset = 390, offsetsingle = 150, roadpart = 28, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+540", offset = 540, offsetsingle = 70, roadpart = 28, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+610", offset = 610, offsetsingle = 150, roadpart = 28, direction = 1 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+760", offset = 760, offsetsingle = 100, roadpart = 28, direction = 1 });
+            //从k28+020到610,760-20 总共740m
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+020", offset = 20, offsetsingle  = 80,offsetsinglepx = 80*pxlong/k28,  roadpart = 28, direction = 1 });//后面一个摄像头减去当前摄像头的距离
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+100", offset = 100, offsetsingle = 75, offsetsinglepx = 75 * pxlong / k28, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+175", offset = 175, offsetsingle = 75, offsetsinglepx = 75 * pxlong / k28, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+250", offset = 250, offsetsingle = 70, offsetsinglepx = 70 * pxlong / k28, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+320", offset = 320, offsetsingle = 70, offsetsinglepx = 70 * pxlong / k28, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+390", offset = 390, offsetsingle = 150, offsetsinglepx = 150 * pxlong / k28, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+540", offset = 540, offsetsingle = 70, offsetsinglepx = 70 * pxlong / k28, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+610", offset = 610, offsetsingle = 150, offsetsinglepx = 150 * pxlong / k28, roadpart = 28, direction = 1 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K28+760", offset = 760, offsetsingle = 100, offsetsinglepx = 100 * pxlong / k28, roadpart = 28, direction = 1 });
 
-
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+047", offset = 0, offsetsingle = 47, roadpart = 35, direction = 2 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+120", offset = 47, offsetsingle = 73, roadpart = 35, direction = 2 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+190", offset = 120, offsetsingle = 70, roadpart = 35, direction = 2 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+310", offset = 190, offsetsingle = 120, roadpart = 35, direction = 2 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+385", offset = 310, offsetsingle = 75, roadpart = 35, direction = 2 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+447", offset = 385, offsetsingle = 62, roadpart = 35, direction = 2 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+520", offset = 447, offsetsingle = 73, roadpart = 35, direction = 2 });
-            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+670", offset = 520, offsetsingle = 150, roadpart = 35, direction = 2 });
+            //从k35+047到670=745-47=698m
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+047", offset = 0, offsetsingle = 47, offsetsinglepx = 47 * pxlong / k35, roadpart = 35, direction = 2 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+120", offset = 47, offsetsingle = 73, offsetsinglepx = 73 * pxlong / k35, roadpart = 35, direction = 2 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+190", offset = 120, offsetsingle = 70, offsetsinglepx = 70 * pxlong / k35, roadpart = 35, direction = 2 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+310", offset = 190, offsetsingle = 120, offsetsinglepx = 120 * pxlong / k35, roadpart = 35, direction = 2 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+385", offset = 310, offsetsingle = 75, offsetsinglepx = 75 * pxlong / k35, roadpart = 35, direction = 2 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+447", offset = 385, offsetsingle = 62, offsetsinglepx = 62 * pxlong / k35, roadpart = 35, direction = 2 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+520", offset = 447, offsetsingle = 73, offsetsinglepx = 73 * pxlong / k35, roadpart = 35, direction = 2 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+670", offset = 520, offsetsingle = 150, offsetsinglepx = 150 * pxlong / k35, roadpart = 35, direction = 2 });
+            cameralist.Add(new TransportCarCameraToTunnel() { camera = "K35+745", offset = 670, offsetsingle = 150, offsetsinglepx = 150 * pxlong / k35, roadpart = 35, direction = 2 });
         }
 
 
@@ -216,8 +220,8 @@ namespace SZY.Platform.WebApi.Client
 
                 int pxlong = int.Parse(_configuration["MQTTSet:Pxlong"].ToString());//模拟一个屏幕的像素
                 int k28 = int.Parse(_configuration["MQTTSet:K2right"].ToString()); //k28同济选择的最后一个摄像头，实际占的米
-                int k35 = int.Parse(_configuration["MQTTSet:K2left"].ToString()); ;
-                float tongjiscreen = 2202.91f;//同济算法单个屏幕的长度
+                int k35 = int.Parse(_configuration["MQTTSet:K2left"].ToString()); 
+                float tongjiscreen = float.Parse(_configuration["MQTTSet:Tongjiscreen"].ToString()); //同济算法单个屏幕的长度
                 //var sss = _repo.GetPageList();
                 if (topic.Contains(_configuration["MQTTSet:TongJiSend"].ToString()))
                 {
@@ -239,6 +243,7 @@ namespace SZY.Platform.WebApi.Client
                                 int curdirection = curcamera.direction;
                                 int curroadpart = curcamera.roadpart;
                                 int curoffsetsingle = curcamera.offsetsingle;
+                                int curoffsetsinglepx = curcamera.offsetsinglepx;
                                 obj.result.direction = curdirection;
                                 obj.result.roadpart = curroadpart;
                                 
@@ -247,15 +252,15 @@ namespace SZY.Platform.WebApi.Client
                                     for (int i = 0; i < obj.result.carinfo.Count; i++)
                                     {
                                         float curdistance = 0f;
-                                        if (curdirection == 1)
-                                        {
-                                            curdistance = (obj.result.carinfo[i].distance / tongjiscreen * curoffsetsingle + curcamera.offset) * pxlong / k28;//先算同济单个屏幕里的比例，然后换算到实际摄像头的米数距离，最后转换成像素距离。
-                                        }
-                                        else if (curdirection == 2)
-                                        {
-                                            curdistance = (curoffsetsingle - obj.result.carinfo[i].distance / tongjiscreen * curoffsetsingle + curcamera.offset) * pxlong / k35;
-                                        }
-                                        
+                                        //if (curdirection == 1)
+                                        //{
+                                        //    curdistance = (obj.result.carinfo[i].distance / tongjiscreen * curoffsetsingle + curcamera.offset) * pxlong / k28;//先算同济单个屏幕里的比例，然后换算到实际摄像头的米数距离，最后转换成像素距离。//这个是总屏幕里的位置
+                                        //}
+                                        //else if (curdirection == 2)
+                                        //{
+                                        //    curdistance = (curoffsetsingle - obj.result.carinfo[i].distance / tongjiscreen * curoffsetsingle + curcamera.offset) * pxlong / k35;
+                                        //}
+                                        curdistance = obj.result.carinfo[i].distance / tongjiscreen * curoffsetsinglepx;//实际当前摄像头像素
 
                                         obj.result.carinfo[i].distance = (int)curdistance;
                                     }

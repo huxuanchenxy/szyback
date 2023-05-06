@@ -33,14 +33,13 @@ namespace SZY.Platform.WebApi.Controllers
         private IHttpContextAccessor _accessor;
         private readonly IWorkTaskService _service;
         private readonly Microsoft.Extensions.Logging.ILogger _logger;
-        private MosquittoMqttClientService _mqttclientservice;
         private readonly Logger _logger1;
         private readonly Logger _logger2;
         private readonly Logger _logger3;
         private readonly IJingGai2AlarmService _jg2service;
         private readonly IConfiguration _configuration;
 
-        public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, MosquittoMqttClientService mqttclientservice, IJingGai2AlarmService jg2service, IConfiguration configuration)
+        public WfController(IWorkTaskService service, ISchedulerFactory schedulerFactory, QuartzStart quart, IHttpContextAccessor accessor, ILogger<WfController> logger, IJingGai2AlarmService jg2service, IConfiguration configuration)
         {
             _service = service;
             _jg2service = jg2service;
@@ -48,7 +47,6 @@ namespace SZY.Platform.WebApi.Controllers
             _quart = quart;
             _accessor = accessor;
             _logger = logger;
-            _mqttclientservice = mqttclientservice;
             _configuration = configuration;
 
             _logger1 = new LoggerConfiguration()
@@ -789,7 +787,7 @@ namespace SZY.Platform.WebApi.Controllers
 
                     _logger.LogWarning(payloadstr);
                     var applicationMessage = new MqttApplicationMessageBuilder()
-                    .WithTopic("transport/car/frontmock")
+                    .WithTopic(_configuration["MQTTSet:FackSend"].ToString())
                     .WithPayload(payloadstr)
                                         .Build();
 
