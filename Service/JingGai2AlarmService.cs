@@ -13,6 +13,8 @@ namespace SZY.Platform.WebApi.Service
     public interface IJingGai2AlarmService
     {
         Task<ApiResult> Save(JingGai2Alarm obj);
+        Task<JingGai2AlarmPageView> GetPageList(JingGai2AlarmParm parm);
+        Task<Jinggai2AlarmPhonePageView> GetPageList2();
     }
 
     public class JingGai2AlarmService : IJingGai2AlarmService
@@ -28,6 +30,34 @@ namespace SZY.Platform.WebApi.Service
             _userID = _authhelper.GetUserId();
         }
 
+        public async Task<JingGai2AlarmPageView> GetPageList(JingGai2AlarmParm parm)
+        {
+            JingGai2AlarmPageView ret = new JingGai2AlarmPageView();
+            try
+            {
+                ret = await _repo.GetPageList(parm);
+            }
+            catch (Exception ex)
+            {
+                
+            }
+            return ret;
+        }
+
+
+        public async Task<Jinggai2AlarmPhonePageView> GetPageList2()
+        {
+            Jinggai2AlarmPhonePageView ret = new Jinggai2AlarmPhonePageView();
+            try
+            {
+                ret = await _repo.GetPageList2();
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return ret;
+        }
         public async Task<ApiResult> Save(JingGai2Alarm obj)
         {
             ApiResult ret = new ApiResult();

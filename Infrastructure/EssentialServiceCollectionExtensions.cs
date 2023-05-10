@@ -47,9 +47,9 @@ namespace SZY.Platform.WebApi.Infrastructure
 
             services.AddTransient<IMaintenanceService, MaintenanceService>();
 
-            services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
+            //services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
 
-            services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();
+            //services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();
 
             var builder = new ConfigurationBuilder()
     //.SetBasePath("path here") //<--You would need to set the path
@@ -57,13 +57,13 @@ namespace SZY.Platform.WebApi.Infrastructure
 
             IConfiguration _configuration = builder.Build();
 
-            services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
-            {
-                aspOptionBuilder
-                .WithCredentials("admin", "public")
-                .WithClientId("zdh" + Guid.NewGuid().ToString("D"))
-                .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
-            });
+            //services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
+            //{
+            //    aspOptionBuilder
+            //    .WithCredentials("admin", "public")
+            //    .WithClientId("zdh" + Guid.NewGuid().ToString("D"))
+            //    .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
+            //});
 
             //services.AddSingleton<MosquittoMqttClientService>();
             //services.AddSingleton<IHostedService>(serviceProvider =>

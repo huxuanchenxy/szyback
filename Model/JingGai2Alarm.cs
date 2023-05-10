@@ -9,12 +9,24 @@ namespace SZY.Platform.WebApi.Model
 {
     public class JingGai2AlarmParm : BaseQueryParm
     {
-
+        public string client_id { get; set; }
     }
     public class JingGai2AlarmPageView
     {
         public List<JingGai2Alarm> rows { get; set; }
         public int total { get; set; }
+    }
+
+    public class Jinggai2AlarmPhonePageView
+    {
+        public List<Jinggai2AlarmPhone> rows { get; set; }
+        public int total { get; set; }
+    }
+
+    public class Jinggai2AlarmPhone : BaseEntity
+    {
+        public string client_id { get; set; }
+        public string phone { get; set; }
     }
 
     public class JingGai2Alarm : BaseEntity

@@ -18,6 +18,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using SZY.Platform.WebApi.Client;
+using SZY.Platform.WebApi.Helper;
 using SZY.Platform.WebApi.Model;
 using SZY.Platform.WebApi.Service;
 
@@ -333,6 +334,16 @@ namespace SZY.Platform.WebApi.Controllers
         }
 
 
+        [HttpPost("AliyunSendSMS")]
+        public async Task<ActionResult<JingGaiRet2>> AliyunSendSMS()
+        {
+            JingGaiRet2 ret = new JingGaiRet2();
+            //AliyunHelper.SendSMS();
+            var sms = AliyunHelper.SendSMS(new JingGai2Alarm() { alarm_settings_title = "最大震动幅度", value = "120",client_name = "北京亦庄9224", alarm_settings_value = "100" }, _configuration["JingGai:Phone"]);
+            _logger2.Warning(JsonConvert.SerializeObject(sms));
+            return ret;
+        }
+
         [HttpPost("JingGaiApi")]
         public async Task<ActionResult<JingGaiRet2>> JingGaiApi(JObject json)
         {
@@ -359,8 +370,11 @@ namespace SZY.Platform.WebApi.Controllers
                         OpenApiJingGai2Alarm json1 = JsonConvert.DeserializeObject<OpenApiJingGai2Alarm>(json.ToString());
                         try
                         {
+                            //string phones = _configuration["JingGai:Phone"];
                             JingGai2AlarmToDB(json1);
                             _logger2.Warning("JingGai2AlarmToDB 成功 ");
+
+
                         }
                         catch (Exception ex)
                         {
@@ -439,6 +453,10 @@ namespace SZY.Platform.WebApi.Controllers
                             var et = await GetJingGai2DeviceDetail(json.client_id);
                             if (et.data != null)
                             {
+                                var alarmdata = await _jg2service.GetPageList(new JingGai2AlarmParm() {  client_id = json.client_id});
+                                _logger2.Warning("alarmdata limit 1");
+                                _logger2.Warning(JsonConvert.SerializeObject(alarmdata));
+                                var phoneset = await _jg2service.GetPageList2();
                                 foreach (var s in p.alarm_settings)
                                 {
                                     JingGai2Alarm obj = new JingGai2Alarm();
@@ -460,6 +478,36 @@ namespace SZY.Platform.WebApi.Controllers
                                     obj.alarm_settings_compare = s.compare;
                                     obj.alarm_settings_value = Convert.ToString(s.value);
                                     await _jg2service.Save(obj);
+                                    try
+                                    {
+                                        var listphone = phoneset.rows.Where(o => o.client_id == obj.client_id);
+                                        _logger2.Warning("listphone");
+                                        _logger2.Warning(JsonConvert.SerializeObject(listphone));
+                                        //string[] phonearr = phones.Split(",");
+                                        foreach (var objphone in listphone)
+                                        {
+                                            var lastdate = alarmdata.rows[0].date1;
+                                            _logger2.Warning("DateTime.Now - lastdate");
+                                            _logger2.Warning(DateTime.Now.ToString());
+                                            _logger2.Warning(lastdate.ToString());
+                                            if ((DateTime.Now - lastdate).TotalMinutes >= int.Parse(_configuration["JingGai:Gap"]))
+                                            {
+                                                var sms = AliyunHelper.SendSMS(new JingGai2Alarm() { client_name = obj.client_name, value = obj.value, alarm_settings_title = obj.alarm_settings_title, alarm_settings_value = obj.alarm_settings_value }, objphone.phone);
+                                                
+                                                _logger2.Warning(JsonConvert.SerializeObject(sms));
+                                            }
+                                            else
+                                            {
+                                                _logger2.Warning("clientid:" + obj.client_id + "在 " + _configuration["JingGai:Gap"] + " 分钟内已报警，不重复发短信");
+                                            }
+                                            
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger2.Error(ex.ToString());
+                                    }
+
                                 }
                             }
                             

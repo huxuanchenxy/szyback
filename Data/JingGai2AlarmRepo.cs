@@ -13,6 +13,8 @@ namespace SZY.Platform.WebApi.Data
     {
         
         Task<JingGai2Alarm> Save(JingGai2Alarm obj);
+        Task<JingGai2AlarmPageView> GetPageList(JingGai2AlarmParm parm);
+        Task<Jinggai2AlarmPhonePageView> GetPageList2();
     }
 
     public class JingGai2AlarmRepo : BaseRepo, IJingGai2AlarmRepo<JingGai2Alarm>
@@ -33,7 +35,38 @@ namespace SZY.Platform.WebApi.Data
             });
         }
 
-        
+        public async Task<JingGai2AlarmPageView> GetPageList(JingGai2AlarmParm parm)
+        {
+            return await WithConnection(async c =>
+            {
+
+                StringBuilder sql = new StringBuilder();
+                sql.Append($@"  SELECT * from jinggai2_alarm WHERE client_id = "+ parm.client_id +" order by id desc limit 1 ; ");
+                var ets = await c.QueryAsync<JingGai2Alarm>(sql.ToString());
+
+                JingGai2AlarmPageView ret = new JingGai2AlarmPageView();
+                ret.rows = ets.ToList();
+                return ret;
+            });
+        }
+
+
+        public async Task<Jinggai2AlarmPhonePageView> GetPageList2()
+        {
+            return await WithConnection(async c =>
+            {
+
+                StringBuilder sql = new StringBuilder();
+                sql.Append($@"  SELECT * from jinggai2_alarm_phone ; ");
+                var ets = await c.QueryAsync<Jinggai2AlarmPhone>(sql.ToString());
+
+                Jinggai2AlarmPhonePageView ret = new Jinggai2AlarmPhonePageView();
+                ret.rows = ets.ToList();
+                return ret;
+            });
+        }
+
+
     }
 }
 
