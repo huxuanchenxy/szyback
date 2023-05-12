@@ -46,7 +46,8 @@ namespace SZY.Platform.WebApi.Infrastructure
             services.AddTransient<IConstructionPlanMonthChartService, ConstructionPlanMonthChartService>();
 
             services.AddTransient<IMaintenanceService, MaintenanceService>();
-
+            services.AddTransient<IBusAlarmService, BusAlarmService>();
+            
             //services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
 
             //services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();

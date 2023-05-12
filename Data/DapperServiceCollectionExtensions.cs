@@ -26,7 +26,8 @@ namespace SZY.Platform.WebApi.Data
             services.AddTransient<IMaintenanceRepo<MaintenanceItem>, MaintenanceRepo>();
             services.AddTransient<ITransportCameraRepo<TransportCarCameraToTunnel>, TransportCameraRepo>();
             services.AddTransient<IJingGai2AlarmRepo<JingGai2Alarm>, JingGai2AlarmRepo>();
-            
+            services.AddTransient<IBusAlarmRepo<BusAlarm>, BusAlarmRepo>();
+
 
             //配置列名映射
             FluentMapper.Initialize(config =>
@@ -57,6 +58,7 @@ namespace SZY.Platform.WebApi.Data
 
                 config.AddMap(new TransportCarCameraToTunnelMap());
                 config.AddMap(new JingGai2AlarmMap());
+                config.AddMap(new BusAlarmMap());
 
             });
             return services;

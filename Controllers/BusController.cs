@@ -11,6 +11,7 @@ using System.Web;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using MSS.API.Common;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -18,6 +19,7 @@ using Serilog;
 using Serilog.Core;
 using SZY.Platform.WebApi.Helper;
 using SZY.Platform.WebApi.Model;
+using SZY.Platform.WebApi.Service;
 
 namespace SZY.Platform.WebApi.Controllers
 {
@@ -28,8 +30,10 @@ namespace SZY.Platform.WebApi.Controllers
 
         private readonly Logger _logger;
         private IHttpContextAccessor _accessor;
+        private readonly IConfiguration _configuration;
+        private readonly IBusAlarmService _service;
 
-        public BusController(IHttpContextAccessor accessor)
+        public BusController(IHttpContextAccessor accessor, IConfiguration configuration, IBusAlarmService service)
         {
             _accessor = accessor;
             _logger = new LoggerConfiguration()
@@ -42,6 +46,8 @@ namespace SZY.Platform.WebApi.Controllers
         //.Enrich.FromLogContext()
         .WriteTo.RollingFile(@"c:\\BusLogs\Buslog.txt")
         .CreateLogger();
+            _configuration = configuration;
+            _service = service;
         }
 
 
@@ -55,6 +61,7 @@ namespace SZY.Platform.WebApi.Controllers
                 _logger.Warning("PostAiAlarm 来自:" + ip + "的请求   obj: " + JsonConvert.SerializeObject(parm));
                 if (parm != null)
                 {
+                    await _service.Save(parm);
                     Base64toImg(parm.alarm_picture);
                 }
             }
@@ -72,7 +79,7 @@ namespace SZY.Platform.WebApi.Controllers
         private void Base64toImg(string base64str)
         {
             //站点文件目录
-            string fileDir = @"F:\netcontrol\project\2022\szy\upload\";
+            string fileDir = _configuration["CheZai:Pic"]+ DateTime.Now.Year.ToString() + "\\" + DateTime.Now.Month.ToString() + "\\";
             //文件名称
             string fileName = "chezai" + DateTime.Now.ToString("yyyyMMddHHmmssff");
             //保存文件所在站点位置
