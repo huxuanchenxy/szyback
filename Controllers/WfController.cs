@@ -383,6 +383,17 @@ namespace SZY.Platform.WebApi.Controllers
                         break;
                     case "property":
                         topic = "/jinggai/property";
+                        OpenApiJingGai2Data json2 = JsonConvert.DeserializeObject<OpenApiJingGai2Data>(json.ToString());
+                        try
+                        {
+                            //string phones = _configuration["JingGai:Phone"];
+                            JingGai2DataToDB(json2);
+                            _logger2.Warning("JingGai2DataToDB 成功 ");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger2.Warning("JingGai2DataToDB 失败: " + ex.Message.ToString());
+                        }
                         break;
                     case "device_create":
                         topic = "/jinggai/device_create";
@@ -517,7 +528,10 @@ namespace SZY.Platform.WebApi.Controllers
             }
         }
 
-
+        private async void JingGai2DataToDB(OpenApiJingGai2Data json)
+        {
+            await _jg2service.Save2(json);
+        }
         [HttpPost("JingGaiOpenApiDevice")]
         public async Task<ActionResult<OpenApiDeviceObj>> JingGaiOpenApiDevice(int page_index,int page_size,string search_key)
         {
@@ -952,38 +966,9 @@ namespace SZY.Platform.WebApi.Controllers
         public string group_name { get; set; }
     }
 
-    public class OpenApiJingGai2Alarm: JingGaiJson
-    {
-        public new List<OpenApiJingGai2AlarmPayload> payload { get; set; }
-    }
+    
 
-    public class OpenApiJingGai2AlarmPayload
-    {
-        public string alarm_type { get; set; }
-        public string alarm_level { get; set; }
-        public string identifier { get; set; }
-        public dynamic value { get; set; }
-        public string alarm_time { get; set; }
-        public List<OpenApiJingGai2AlarmPayloadSettings> alarm_settings { get; set; }
-    }
 
-    public class OpenApiJingGai2AlarmPayloadSettings
-    {
-        public string title { get; set; }
-        public string identifier { get; set; }
-        public string alarm_type { get; set; }
-        public string alarm_level { get; set; }
-        public string compare { get; set; }
-        public dynamic value { get; set; }
-    }
-
-    public class JingGaiJson
-    {
-        public string client_id { get; set; }
-        public string model_type { get; set; }
-        public string push_type { get; set; }
-        public dynamic payload { get; set; }
-    }
 
 
 

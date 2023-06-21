@@ -90,5 +90,21 @@ namespace SZY.Platform.WebApi.Helper
             return ret;
         }
 
+
+        /// <summary>
+        /// 13位时间戳转 日期格式   1652338858000 -> 2022-05-12 03:00:58
+        /// </summary>
+        /// <param name="timestamp"></param>
+        /// <returns></returns>
+        public static DateTime GetDateTimeMilliseconds(long timestamp)
+        {
+            long begtime = timestamp * 10000;
+            DateTime dt_1970 = new DateTime(1970, 1, 1, 8, 0, 0);
+            long tricks_1970 = dt_1970.Ticks;//1970年1月1日刻度
+            long time_tricks = tricks_1970 + begtime;//日志日期刻度
+            DateTime dt = new DateTime(time_tricks);//转化为DateTime
+            return dt;
+        }
+
     }
 }

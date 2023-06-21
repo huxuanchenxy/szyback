@@ -15,6 +15,7 @@ namespace SZY.Platform.WebApi.Data
         Task<JingGai2Alarm> Save(JingGai2Alarm obj);
         Task<JingGai2AlarmPageView> GetPageList(JingGai2AlarmParm parm);
         Task<Jinggai2AlarmPhonePageView> GetPageList2();
+        Task<JingGai2> Save2(JingGai2 obj);
     }
 
     public class JingGai2AlarmRepo : BaseRepo, IJingGai2AlarmRepo<JingGai2Alarm>
@@ -26,6 +27,20 @@ namespace SZY.Platform.WebApi.Data
             return await WithConnection(async c =>
             {
                 string sql = $@" INSERT INTO `aisense`.`jinggai2_alarm`(`id`, `client_id`, `model_type`, `alarm_type`, `alarm_level`, `identifier`, `value`, `alarm_time`, `alarm_settings_title`, `alarm_settings_identifier`, `alarm_settings_alarm_type`, `alarm_settings_alarm_level`, `alarm_settings_compare`, `alarm_settings_value`,`date1`,`client_group`,`client_name`) VALUES (@id,@client_id,@model_type,@alarm_type,@alarm_level,@identifier,@value,@alarm_time,@alarm_settings_title,@alarm_settings_identifier,@alarm_settings_alarm_type,@alarm_settings_alarm_level,@alarm_settings_compare,@alarm_settings_value,@date1,@client_group,@client_name);
+
+                    ";
+                sql += "SELECT LAST_INSERT_ID() ";
+                int newid = await c.QueryFirstOrDefaultAsync<int>(sql, obj);
+                obj.id = newid;
+                return obj;
+            });
+        }
+
+        public async Task<JingGai2> Save2(JingGai2 obj)
+        {
+            return await WithConnection(async c =>
+            {
+                string sql = $@" INSERT INTO `aisense`.`jinggai2`(`serial_no`, `client_id`, `model_type`, `identifier`, `value`, `is_alarm`, `date1`) VALUES ( @serial_no,@client_id,@model_type,@identifier,@value,@is_alarm,@date1);
 
                     ";
                 sql += "SELECT LAST_INSERT_ID() ";

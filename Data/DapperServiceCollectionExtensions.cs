@@ -59,6 +59,7 @@ namespace SZY.Platform.WebApi.Data
                 config.AddMap(new TransportCarCameraToTunnelMap());
                 config.AddMap(new JingGai2AlarmMap());
                 config.AddMap(new BusAlarmMap());
+                config.AddMap(new JingGai2Map());
 
             });
             return services;
