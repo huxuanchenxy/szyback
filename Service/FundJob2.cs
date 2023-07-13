@@ -1,24 +1,11 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
-using MSS.API.Common;
-using MSS.API.Common.Utility;
-using SZY.Platform.WebApi.Data;
-using SZY.Platform.WebApi.Model;
-using System;
-using System.Net;
-using System.Threading.Tasks;
-using MSS.API.Common.DistributedEx;
-using System.Collections.Generic;
-using System.Linq;
-using Quartz;
-using Serilog.Core;
+﻿using Quartz;
 using Serilog;
-using MQTTnet;
-using MQTTnet.Client.Options;
-using System.Threading;
-using Newtonsoft.Json;
-using MQTTnet.Client;
-using SZY.Platform.WebApi.Client;
-using SZY.Platform.WebApi.Service;
+using Serilog.Core;
+using System.Threading.Tasks;
+using OfficeOpenXml;
+using System.IO;
+using System;
+using Microsoft.Extensions.Configuration;
 
 namespace SZY.Platform.WebApi.Service
 {
@@ -31,7 +18,8 @@ namespace SZY.Platform.WebApi.Service
     public class FundJob2 : IJob//创建IJob的实现类，并实现Excute方法。
     {
         private readonly Logger _logger;
-        public FundJob2()
+        private readonly IConfiguration _configuration;
+        public FundJob2(IConfiguration configuration)
         {
             _logger = new LoggerConfiguration()
 #if DEBUG
@@ -43,8 +31,7 @@ namespace SZY.Platform.WebApi.Service
         //.Enrich.FromLogContext()
         .WriteTo.RollingFile(@"c:\\SZYLogs\FundJob2.txt")
         .CreateLogger();
-
-
+            _configuration = configuration;
         }
         public async Task Execute(IJobExecutionContext context)
         {
@@ -56,7 +43,56 @@ namespace SZY.Platform.WebApi.Service
             //string payloadstr = "{\"A01\":110000,\"res\":\"123\"}";
             //client.PublishMessageAsync("set4GMQTT000801", payloadstr, false, 0);
             //});
-            _logger.Warning("仿真excel生成");
+            _logger.Warning("仿真excel生成开始");
+            try
+            {
+                // 创建Excel文件
+                //var fileName = _configuration["FangZhen:Path"] + @"file.xlsx";
+                //var file = new FileInfo(fileName);
+
+                // 判断文件是否已存在
+                //if (file.Exists)
+                //{
+                //    // 如果存在，则生成一个新的文件名
+                //    var counter = 1;
+                //    var newFileName = Path.GetFileNameWithoutExtension(fileName) + " (" + counter + ")" + Path.GetExtension(fileName);
+                //    while (File.Exists(newFileName))
+                //    {
+                //        counter++;
+                //        newFileName = Path.GetFileNameWithoutExtension(fileName) + " (" + counter + ")" + Path.GetExtension(fileName);
+                //    }
+
+                //    // 更新FileInfo对象
+                //    file = new FileInfo(newFileName);
+                //}
+
+                var sourceFile = _configuration["FangZhen:Path"] + @"file.xlsx";
+                var destinationFile = _configuration["FangZhen:Path"] + @"destinationFile" + DateTime.Now.ToString("yyyyMMddHHmm") +".xlsx";
+
+                // 拷贝文件
+                File.Copy(sourceFile, destinationFile);
+
+                var file = new FileInfo(destinationFile);
+                using (var package = new ExcelPackage(file))
+                {
+                    // 添加工作表
+                    var worksheet = package.Workbook.Worksheets["Sheet1"];
+
+                    // 添加数据
+                    worksheet.Cells["A1"].Value = "Hello1" + DateTime.Now;
+                    worksheet.Cells["B1"].Value = "World1!" + DateTime.Now;
+
+                    // 保存文件
+                    package.Save();
+                }
+                _logger.Warning("仿真excel生成结束"+ destinationFile);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex.ToString());
+            }
+            
+            
         }
     }
 }
