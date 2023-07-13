@@ -54,7 +54,7 @@ namespace SZY.Platform.WebApi.Service
                             .WithCronSchedule(crontab)
                             .Build();
                 //4、创建任务
-                var jobDetail = JobBuilder.Create<FundJob>()
+                var jobDetail = JobBuilder.Create<FundJob2>()
                                 .WithIdentity("job", "group")
                                 .Build();
                 await scheduler.ScheduleJob(jobDetail, trigger);

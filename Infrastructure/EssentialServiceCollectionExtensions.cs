@@ -23,11 +23,11 @@ namespace SZY.Platform.WebApi.Infrastructure
                 configure(optionBuilder);
                 return optionBuilder.Build();
             });
-            services.AddSingleton<MosquittoMqttClientService>();
-            services.AddSingleton<IHostedService>(serviceProvider =>
-            {
-                return serviceProvider.GetService<MosquittoMqttClientService>();
-            });
+            //services.AddSingleton<MosquittoMqttClientService>();
+            //services.AddSingleton<IHostedService>(serviceProvider =>
+            //{
+            //    return serviceProvider.GetService<MosquittoMqttClientService>();
+            //});
 
             return services;
         }
@@ -47,7 +47,7 @@ namespace SZY.Platform.WebApi.Infrastructure
 
             services.AddTransient<IMaintenanceService, MaintenanceService>();
             services.AddTransient<IBusAlarmService, BusAlarmService>();
-            
+
             //services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
 
             //services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();

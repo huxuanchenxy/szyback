@@ -78,7 +78,7 @@ namespace SZY.Platform.WebApi
             //});
             //services.AddConsulService(Configuration);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<FundJob>();
+            services.AddSingleton<FundJob2>();
             services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
             services.AddSingleton<QuartzStart>();
             services.AddSingleton<IJobFactory, IOCJobFactory>();
@@ -117,15 +117,15 @@ builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseHttpsRedirection();
             app.UseMvc();
             //国展中心脚本停止
-            //var quartz = app.ApplicationServices.GetRequiredService<QuartzStart>();
-            //lifetime.ApplicationStarted.Register(() =>
-            //{
-            //    quartz.Start().Wait();
-            //});
-            //lifetime.ApplicationStopped.Register(() =>
-            //{
-            //    quartz.Stop();
-            //});
+            var quartz = app.ApplicationServices.GetRequiredService<QuartzStart>();
+            lifetime.ApplicationStarted.Register(() =>
+            {
+                quartz.Start().Wait();
+            });
+            lifetime.ApplicationStopped.Register(() =>
+            {
+                quartz.Stop();
+            });
         }
 
     }
