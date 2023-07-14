@@ -27,6 +27,7 @@ namespace SZY.Platform.WebApi.Data
             services.AddTransient<ITransportCameraRepo<TransportCarCameraToTunnel>, TransportCameraRepo>();
             services.AddTransient<IJingGai2AlarmRepo<JingGai2Alarm>, JingGai2AlarmRepo>();
             services.AddTransient<IBusAlarmRepo<BusAlarm>, BusAlarmRepo>();
+            services.AddTransient<ISimulationInfoRepo<SimulationInfo>, SimulationInfoRepo>();
 
 
             //配置列名映射
@@ -60,6 +61,7 @@ namespace SZY.Platform.WebApi.Data
                 config.AddMap(new JingGai2AlarmMap());
                 config.AddMap(new BusAlarmMap());
                 config.AddMap(new JingGai2Map());
+                config.AddMap(new SimulationInfoMap());
 
             });
             return services;

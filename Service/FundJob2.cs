@@ -6,6 +6,9 @@ using OfficeOpenXml;
 using System.IO;
 using System;
 using Microsoft.Extensions.Configuration;
+using SZY.Platform.WebApi.Data;
+using SZY.Platform.WebApi.Model;
+using Newtonsoft.Json;
 
 namespace SZY.Platform.WebApi.Service
 {
@@ -19,7 +22,8 @@ namespace SZY.Platform.WebApi.Service
     {
         private readonly Logger _logger;
         private readonly IConfiguration _configuration;
-        public FundJob2(IConfiguration configuration)
+        private readonly ISimulationInfoRepo<SimulationInfo> _repo;
+        public FundJob2(IConfiguration configuration, ISimulationInfoRepo<SimulationInfo> repo)
         {
             _logger = new LoggerConfiguration()
 #if DEBUG
@@ -32,6 +36,7 @@ namespace SZY.Platform.WebApi.Service
         .WriteTo.RollingFile(@"c:\\SZYLogs\FundJob2.txt")
         .CreateLogger();
             _configuration = configuration;
+            _repo = repo;
         }
         public async Task Execute(IJobExecutionContext context)
         {
@@ -46,26 +51,8 @@ namespace SZY.Platform.WebApi.Service
             _logger.Warning("仿真excel生成开始");
             try
             {
-                // 创建Excel文件
-                //var fileName = _configuration["FangZhen:Path"] + @"file.xlsx";
-                //var file = new FileInfo(fileName);
-
-                // 判断文件是否已存在
-                //if (file.Exists)
-                //{
-                //    // 如果存在，则生成一个新的文件名
-                //    var counter = 1;
-                //    var newFileName = Path.GetFileNameWithoutExtension(fileName) + " (" + counter + ")" + Path.GetExtension(fileName);
-                //    while (File.Exists(newFileName))
-                //    {
-                //        counter++;
-                //        newFileName = Path.GetFileNameWithoutExtension(fileName) + " (" + counter + ")" + Path.GetExtension(fileName);
-                //    }
-
-                //    // 更新FileInfo对象
-                //    file = new FileInfo(newFileName);
-                //}
-
+                var data = await _repo.GetPageList(new SimulationInfoParm() { page = 1, rows = 10000, sort = "id", order = "asc",time = "2023-07-12" });
+                _logger.Warning(JsonConvert.SerializeObject(data));
                 var sourceFile = _configuration["FangZhen:Path"] + @"file.xlsx";
                 var destinationFile = _configuration["FangZhen:Path"] + @"destinationFile" + DateTime.Now.ToString("yyyyMMddHHmm") +".xlsx";
 
