@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using SZY.Platform.WebApi.Data;
 using SZY.Platform.WebApi.Model;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SZY.Platform.WebApi.Service
 {
@@ -51,9 +53,22 @@ namespace SZY.Platform.WebApi.Service
             _logger.Warning("仿真excel生成开始");
             try
             {
-                var data = await _repo.GetPageList(new SimulationInfoParm() { page = 1, rows = 10000, sort = "id", order = "asc",time = "2023-07-12" });
-                _logger.Warning(JsonConvert.SerializeObject(data));
-                var sourceFile = _configuration["FangZhen:Path"] + @"file.xlsx";
+                //var yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+                var yesterday = "";
+                if (_configuration["FangZhen:Yesterday"].ToString() != "")
+                {
+                    yesterday = _configuration["FangZhen:Yesterday"].ToString();
+                }
+                else
+                {
+                    yesterday = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+                }
+                _logger.Warning("FangZhen:Yesterday : "+ yesterday);
+                var data = await _repo.GetPageList(new SimulationInfoParm() { page = 1, rows = 10000, sort = "id", order = "asc",time = yesterday });
+                //_logger.Warning(JsonConvert.SerializeObject(data));
+
+                
+                var sourceFile = _configuration["FangZhen:Path"] + _configuration["FangZhen:FileName"];
                 var destinationFile = _configuration["FangZhen:Path"] + @"destinationFile" + DateTime.Now.ToString("yyyyMMddHHmm") +".xlsx";
 
                 // 拷贝文件
@@ -64,10 +79,118 @@ namespace SZY.Platform.WebApi.Service
                 {
                     // 添加工作表
                     var worksheet = package.Workbook.Worksheets["Sheet1"];
+                    
 
-                    // 添加数据
-                    worksheet.Cells["A1"].Value = "Hello1" + DateTime.Now;
-                    worksheet.Cells["B1"].Value = "World1!" + DateTime.Now;
+                    List<DateObj> list = new List<DateObj>();
+                    var timeconfig = _configuration["FangZhen:TimeConfig"].Split(",");
+                    for (int i = 0; i < timeconfig.Length; i++)
+                    {
+                        int asciiCode = int.Parse(_configuration["FangZhen:TimeExcelStart"]) + i;//g开始
+                        string alph = Convert.ToChar(asciiCode).ToString();
+                        //_logger.Warning(alph);
+                        var cellname = alph + _configuration["FangZhen:TimeExcelStartRow"].ToString();
+                        //_logger.Warning(cellname);
+                        worksheet.Cells[cellname].Value = timeconfig[i];
+
+                        var curtimearr = timeconfig[i].Split("-");
+                        var stime = Convert.ToDateTime(yesterday + " " + curtimearr[0] + ":00");
+                        var etime = Convert.ToDateTime(yesterday + " " + curtimearr[1] + ":00");
+                        //for (int j = 3; j <= 6; j++)
+                        //{
+                        //    int lane = j - 3 + 1;
+                        //    var curcellname = alph + j;
+                        //    list.Add(new DateObj() { camera = 1,roadpart = 1,lane = lane, cellName = curcellname, startTime = stime, endTime = etime });
+                        //}
+                        //for (int j = 7; j <= 9; j++)
+                        //{
+                        //    int lane = j - 7 + 1;
+                        //    var curcellname = alph + j;
+                        //    list.Add(new DateObj() { camera = 2, roadpart = 2, lane = lane, cellName = curcellname, startTime = stime, endTime = etime });
+                        //}
+
+                        //for (int j = 25; j <= 26; j++)
+                        //{
+                        //    int lane = j - 25 + 1;
+                        //    var curcellname = alph + j;
+                        //    list.Add(new DateObj() { camera = 3, roadpart = 3, lane = lane, cellName = curcellname, startTime = stime, endTime = etime });
+                        //}
+                        //for (int j = 27; j <= 28; j++)
+                        //{
+                        //    int lane = j - 27 + 1;
+                        //    var curcellname = alph + j;
+                        //    list.Add(new DateObj() { camera = 4, roadpart = 4, lane = lane, cellName = curcellname, startTime = stime, endTime = etime });
+                        //}
+                        var excelconfig = _configuration["FangZhen:ExcelLaneConfig"].Split(",");
+                        foreach (var curconfigarr in excelconfig)
+                        {
+                            var curconfig = curconfigarr.Split("-");
+                            int jcamera = int.Parse(curconfig[0]);
+                            int jrp  = int.Parse(curconfig[1]);
+                            int jstart = int.Parse(curconfig[2]);
+                            int jmax = int.Parse(curconfig[3]);
+                            for (int j = jstart; j <= jmax; j++)
+                            {
+                                int lane = j - jstart + 1;
+                                var curcellname = alph + j;
+                                list.Add(new DateObj() { camera = jcamera, roadpart = jrp, lane = lane, cellName = curcellname, startTime = stime, endTime = etime });
+                            }
+                        }
+                    }
+                    _logger.Warning("list");
+                    _logger.Warning(JsonConvert.SerializeObject(list));
+                    foreach (var curd in data.rows)
+                    {
+                        _logger.Warning("curd");
+                        _logger.Warning(JsonConvert.SerializeObject(curd));
+                        var summ = curd.Summarize;
+
+                        //_logger.Warning(summ);
+                        SqlSum dd = JsonConvert.DeserializeObject<SqlSum>(summ);
+                        //_logger.Warning("dd");
+                        //_logger.Warning(JsonConvert.SerializeObject(dd));
+                        //_logger.Warning("dd.laneinfo");
+                        //_logger.Warning(JsonConvert.SerializeObject(dd.laneinfo));
+                        if (dd.laneinfo != null && dd.laneinfo.Count > 0)
+                        {
+                            foreach (var lanelist in dd.laneinfo)
+                            {
+                                //_logger.Warning("lanelist");
+                                //_logger.Warning(JsonConvert.SerializeObject(lanelist));
+                                //_logger.Warning("curd.Camera");
+                                //_logger.Warning(JsonConvert.SerializeObject(curd.Camera));
+                                //_logger.Warning("curd.RoadPart");
+                                //_logger.Warning(JsonConvert.SerializeObject(curd.RoadPart));
+                                //_logger.Warning("lanelist.lane");
+                                //_logger.Warning(JsonConvert.SerializeObject(lanelist.lane));
+                                //_logger.Warning("curd.Time");
+                                //_logger.Warning(JsonConvert.SerializeObject(curd.Time));
+                                var excelcellname = list.Where(c => c.camera.ToString() == curd.Camera && c.roadpart.ToString() == curd.RoadPart.ToString() && c.lane == lanelist.lane && (curd.Time >= c.startTime && curd.Time < c.endTime)).FirstOrDefault();
+                                //var excelcellname = list.Where(c => c.camera.ToString() == curd.Camera && c.roadpart.ToString() == curd.RoadPart.ToString() && c.lane == lanelist.lane).FirstOrDefault();
+                                //_logger.Warning("excelcellname");
+                                //_logger.Warning(JsonConvert.SerializeObject(excelcellname));
+                                if (excelcellname != null)
+                                {
+                                    //_logger.Warning("worksheet.Cells[excelcellname.cellName].Value");
+                                    //_logger.Warning(JsonConvert.SerializeObject(worksheet.Cells[excelcellname.cellName].Value));
+                                    if (worksheet.Cells[excelcellname.cellName].Value == null)
+                                    {
+                                        worksheet.Cells[excelcellname.cellName].Value = lanelist.count.ToString();
+                                    }
+                                    else
+                                    {
+                                        worksheet.Cells[excelcellname.cellName].Value = int.Parse(worksheet.Cells[excelcellname.cellName].Value.ToString().Trim()) + lanelist.count;
+                                    }
+                                        
+                                }
+                            }
+                        }
+                    }
+
+                    _logger.Warning(JsonConvert.SerializeObject(list));
+
+                    //// 添加数据
+                    //worksheet.Cells["A1"].Value = "Hello1" + DateTime.Now;
+                    //worksheet.Cells["B1"].Value = "World1!" + DateTime.Now;
 
                     // 保存文件
                     package.Save();
@@ -82,4 +205,31 @@ namespace SZY.Platform.WebApi.Service
             
         }
     }
+
+    public class DateObj
+    {
+        public int camera { get; set; }
+        public int roadpart { get; set; }
+        public int lane { get; set; }
+        public string cellName { get; set; }
+        public DateTime startTime { get; set; }
+        public DateTime endTime { get; set; }
+    }
+
+    public class SqlSum
+    {
+        public string time { get; set; }
+        public int roadpart { get; set; }
+        public int camera { get; set; }
+        public int count { get; set; }
+        public List<laneinfo> laneinfo { get; set; }
+    }
+
+    public class laneinfo
+    {
+        public int lane { get; set; }
+        public int count { get; set; }
+    }
+
+
 }
