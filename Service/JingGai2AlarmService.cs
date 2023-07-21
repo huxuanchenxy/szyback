@@ -6,6 +6,7 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 using SZY.Platform.WebApi.Helper;
+using SZY.Platform.WebApi.Controllers;
 
 
 // Coded By admin 2019/11/9 13:46:57
@@ -17,6 +18,7 @@ namespace SZY.Platform.WebApi.Service
         Task<JingGai2AlarmPageView> GetPageList(JingGai2AlarmParm parm);
         Task<Jinggai2AlarmPhonePageView> GetPageList2();
         Task<ApiResult> Save2(OpenApiJingGai2Data obj);
+        Task<ApiResult> Save3(OpenApiDeviceObj json);
     }
 
     public class JingGai2AlarmService : IJingGai2AlarmService
@@ -125,7 +127,42 @@ namespace SZY.Platform.WebApi.Service
         }
 
 
-
+        public async Task<ApiResult> Save3(OpenApiDeviceObj json)
+        {
+            ApiResult ret = new ApiResult();
+            try
+            {
+                if (json != null)
+                {
+                    if (json.data != null && json.data.data!= null && json.data.data.Count > 0)
+                    {
+                        foreach (var p in json.data.data)
+                        {
+                            var device_name = p.device_name;
+                            var model_type = p.model_type;
+                            var client_id = p.client_id;
+                            var addr = p.addr;
+                            var longitude = p.longitude;
+                            var latitude = p.latitude;
+                            var active_at = p.active_at;
+                            var last_upload_at = p.last_upload_at;
+                            var status = p.status == "online"? "在线":"离线";
+                            var groups = p.groups;
+                            JingGaiDevice etobj = new JingGaiDevice() {  date1 = AliyunHelper.GetDateTimeMilliseconds(last_upload_at).ToString("yyyy-MM-dd hh:mm:ss"), device_id = client_id, device_name = device_name,device_type = model_type, install_addr = addr, install_time = active_at.ToString(), lat = latitude.ToString(), lng = longitude.ToString(), status = status  };
+                            await _repo.SaveJingGaiDevice(etobj);
+                        }
+                    }
+                }
+                ret.code = Code.Success;
+                return ret;
+            }
+            catch (Exception ex)
+            {
+                ret.code = Code.Failure;
+                ret.msg = ex.Message;
+                return ret;
+            }
+        }
     }
 }
 

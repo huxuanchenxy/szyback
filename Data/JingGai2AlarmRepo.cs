@@ -16,6 +16,7 @@ namespace SZY.Platform.WebApi.Data
         Task<JingGai2AlarmPageView> GetPageList(JingGai2AlarmParm parm);
         Task<Jinggai2AlarmPhonePageView> GetPageList2();
         Task<JingGai2> Save2(JingGai2 obj);
+        Task<JingGaiDevice> SaveJingGaiDevice(JingGaiDevice obj);
     }
 
     public class JingGai2AlarmRepo : BaseRepo, IJingGai2AlarmRepo<JingGai2Alarm>
@@ -78,6 +79,31 @@ namespace SZY.Platform.WebApi.Data
                 Jinggai2AlarmPhonePageView ret = new Jinggai2AlarmPhonePageView();
                 ret.rows = ets.ToList();
                 return ret;
+            });
+        }
+
+        public async Task<JingGaiDevice> SaveJingGaiDevice(JingGaiDevice obj)
+        {
+            return await WithConnection(async c =>
+            {
+                string sqltemp = $@" SELECT * FROM jinggai_device WHERE device_id = @device_id ";
+                var tempdata = await c.QueryFirstOrDefaultAsync<JingGaiDevice>(sqltemp, obj);
+                if (tempdata != null)
+                {
+                    string sqlupdate = $@" UPDATE `aisense`.`jinggai_device` SET `device_type` = @device_type, `device_name` = @device_name, `install_addr` = @install_addr, `install_time` = @install_time, `lng` = @lng, `lat` = @lat, `date1` = @date1,`status` = @status WHERE `device_id` = @device_id;";
+                    await c.ExecuteAsync(sqlupdate, obj);
+                    return obj;
+                }
+                else
+                {
+                    string sql = $@" INSERT INTO `aisense`.`jinggai_device`( `device_id`, `device_type`, `device_name`, `install_addr`, `install_time`, `lng`, `lat`, `date1`, `status`) VALUES (@device_id,@device_type,@device_name,@install_addr,@install_time,@lng,@lat,@date1,@status);
+                    ";
+                    sql += "SELECT LAST_INSERT_ID() ";
+                    int newid = await c.QueryFirstOrDefaultAsync<int>(sql, obj);
+                    obj.id = newid;
+                    return obj;
+                }
+
             });
         }
 

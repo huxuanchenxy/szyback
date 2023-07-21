@@ -24,7 +24,7 @@ namespace SZY.Platform.WebApi.Model
         /// <summary>
         /// 设备类型 1:井盖
         /// </summary>
-        public int device_type { get; set; }
+        public string device_type { get; set; }
         /// <summary>
         /// 固件版本
         /// </summary>
@@ -46,6 +46,7 @@ namespace SZY.Platform.WebApi.Model
         public string lat { get; set; }
        
         public string date1 { get; set; }
+        public string status { get; set; }
     }
 
     public class JingGaiDeviceMap : EntityMap<JingGaiDevice>
@@ -61,6 +62,7 @@ namespace SZY.Platform.WebApi.Model
             Map(o => o.lng).ToColumn("lng");
             Map(o => o.lat).ToColumn("lat");
             Map(o => o.date1).ToColumn("date1");
+            Map(o => o.status).ToColumn("status");
         }
     }
 

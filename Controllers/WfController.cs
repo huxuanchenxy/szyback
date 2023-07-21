@@ -69,7 +69,8 @@ namespace SZY.Platform.WebApi.Controllers
 #endif
         //.MinimumLevel.Override("Microsoft", LogEventLevel.)
         //.Enrich.FromLogContext()
-        .WriteTo.RollingFile(@"c:\\JingGaiLogs\log.txt")
+        //.WriteTo.RollingFile(@"c:\\JingGaiLogs\log.txt")
+        .WriteTo.File(@"c:\\JingGaiLogs\log.txt", rollingInterval: RollingInterval.Day)
         .CreateLogger();
 
 
@@ -389,6 +390,8 @@ namespace SZY.Platform.WebApi.Controllers
                             //string phones = _configuration["JingGai:Phone"];
                             JingGai2DataToDB(json2);
                             _logger2.Warning("JingGai2DataToDB 成功 ");
+                            SyncJingGai2DeviceOnline();
+                            _logger2.Warning("SyncJingGai2DeviceOnline 同步井盖device 成功 ");
                         }
                         catch (Exception ex)
                         {
@@ -449,6 +452,20 @@ namespace SZY.Platform.WebApi.Controllers
                     ex.Message);
             }
             return ret;
+        }
+
+        private async void SyncJingGai2DeviceOnline()
+        {
+            try
+            {
+                var ret = await getJingGaiOpenApiDeviceApi(1, 100, "");
+                await _jg2service.Save3(ret);
+            }
+            catch (Exception ex)
+            {
+                _logger2.Warning("SyncJingGai2DeviceOnline: " + ex.Message.ToString());
+            }
+            
         }
 
         private async void JingGai2AlarmToDB(OpenApiJingGai2Alarm json)
@@ -540,24 +557,7 @@ namespace SZY.Platform.WebApi.Controllers
             {
                 //AppID: kygjIYuuImUQzfiD
                 //AppSecret: ZpP2XVr6ILoByCWcgKxcTu3SRP5II0LE
-                var client = new RestClient("https://things.cdjyl.com.cn:12000/api/v1/open_api/device?page_index="+ page_index + "&page_size="+ page_size + "&search_key="+ search_key);
-                client.Timeout = -1;
-                string timestamp = CurrentTimeStamp(true).ToString();
-                string rand = CreateRandCdkeys(16);
-                string appid = "kygjIYuuImUQzfiD";
-                string str = "app_id="+appid+"&nonce="+ rand + "&timestamp="+ timestamp;
-                string sign = HmacSHA256(str, "ZpP2XVr6ILoByCWcgKxcTu3SRP5II0LE");
-                _logger2.Warning("JingGaiOpenApiDevice请求字符串:" + str);
-                _logger2.Warning("JingGaiOpenApiDevice签名:" + sign);
-                var request = new RestRequest(Method.GET);
-                request.AddHeader("X-App-ID", appid);
-                request.AddHeader("X-Timestamp", timestamp);//"1662098451"
-                request.AddHeader("X-Nonce", rand);//"NMEtgrGslbA4QRD0"
-                request.AddHeader("X-Sign", sign);
-                IRestResponse response = await client.ExecuteAsync(request);
-                string content = response.Content;
-
-                ret = JsonConvert.DeserializeObject<OpenApiDeviceObj>(content);
+                ret = await getJingGaiOpenApiDeviceApi(page_index, page_size, search_key);
 
             }
             catch (System.Exception ex)
@@ -570,6 +570,28 @@ namespace SZY.Platform.WebApi.Controllers
                     ex.Message);
             }
             return ret;
+        }
+
+        private async Task<OpenApiDeviceObj> getJingGaiOpenApiDeviceApi(int page_index, int page_size, string search_key)
+        {
+            var client = new RestClient("https://things.cdjyl.com.cn:12000/api/v1/open_api/device?page_index=" + page_index + "&page_size=" + page_size + "&search_key=" + search_key);
+            client.Timeout = -1;
+            string timestamp = CurrentTimeStamp(true).ToString();
+            string rand = CreateRandCdkeys(16);
+            string appid = "kygjIYuuImUQzfiD";
+            string str = "app_id=" + appid + "&nonce=" + rand + "&timestamp=" + timestamp;
+            string sign = HmacSHA256(str, "ZpP2XVr6ILoByCWcgKxcTu3SRP5II0LE");
+            _logger2.Warning("JingGaiOpenApiDevice请求字符串:" + str);
+            _logger2.Warning("JingGaiOpenApiDevice签名:" + sign);
+            var request = new RestRequest(Method.GET);
+            request.AddHeader("X-App-ID", appid);
+            request.AddHeader("X-Timestamp", timestamp);//"1662098451"
+            request.AddHeader("X-Nonce", rand);//"NMEtgrGslbA4QRD0"
+            request.AddHeader("X-Sign", sign);
+            IRestResponse response = await client.ExecuteAsync(request);
+            string content = response.Content;
+
+            return JsonConvert.DeserializeObject<OpenApiDeviceObj>(content);
         }
 
         private async Task<OpenApiDeviceDetail> GetJingGai2DeviceDetail(string client_id)
