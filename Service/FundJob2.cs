@@ -140,8 +140,8 @@ namespace SZY.Platform.WebApi.Service
                     _logger.Warning(JsonConvert.SerializeObject(list));
                     foreach (var curd in data.rows)
                     {
-                        _logger.Warning("curd");
-                        _logger.Warning(JsonConvert.SerializeObject(curd));
+                        //_logger.Warning("curd");
+                        //_logger.Warning(JsonConvert.SerializeObject(curd));
                         var summ = curd.Summarize;
 
                         //_logger.Warning(summ);
@@ -186,7 +186,7 @@ namespace SZY.Platform.WebApi.Service
                         }
                     }
 
-                    _logger.Warning(JsonConvert.SerializeObject(list));
+                    //_logger.Warning(JsonConvert.SerializeObject(list));
 
                     //// 添加数据
                     //worksheet.Cells["A1"].Value = "Hello1" + DateTime.Now;
