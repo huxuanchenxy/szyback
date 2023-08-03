@@ -106,5 +106,39 @@ namespace SZY.Platform.WebApi.Helper
             return dt;
         }
 
+        public static string GetNextColumnName(string columnName)
+        {
+            char[] columnChars = columnName.ToCharArray();
+            int lastIndex = columnChars.Length - 1;
+
+            // Check if the last character is 'Z'
+            if (columnChars[lastIndex] == 'Z')
+            {
+                // Find the last non-'Z' character in the column name
+                int carryIndex = lastIndex;
+                while (carryIndex >= 0 && columnChars[carryIndex] == 'Z')
+                {
+                    columnChars[carryIndex] = 'A';
+                    carryIndex--;
+                }
+
+                // If all characters are 'Z', add a new 'A' at the beginning of the column name
+                if (carryIndex < 0)
+                {
+                    return "A" + new string(columnChars);
+                }
+
+                // Increment the non-'Z' character
+                columnChars[carryIndex]++;
+            }
+            else
+            {
+                // If the last character is not 'Z', simply increment it
+                columnChars[lastIndex]++;
+            }
+
+            return new string(columnChars);
+        }
+
     }
 }

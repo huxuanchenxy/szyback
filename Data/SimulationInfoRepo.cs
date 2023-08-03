@@ -37,7 +37,8 @@ namespace SZY.Platform.WebApi.Data
 
                 if (parm.time != null)
                 {
-                    whereSql.Append(" and DATE(time) = '"+parm.time+"'");
+                    //whereSql.Append(" and DATE(time) = '"+parm.time+"'");
+                    whereSql.Append(" and time >= '" + parm.time + " 00:00:00' and time <= '" + parm.time + " 23:59:59' ");
                 }
 
                 sql.Append(whereSql);

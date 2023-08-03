@@ -5,6 +5,7 @@ using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MQTTnet.Protocol;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -17,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SZY.Platform.WebApi.Data;
 using SZY.Platform.WebApi.Model;
+using SZY.Platform.WebApi.Service;
 
 namespace SZY.Platform.WebApi.Client
 {
@@ -36,6 +38,7 @@ namespace SZY.Platform.WebApi.Client
 
         private IMqttClient client;
         private readonly Logger _logger;
+        private readonly Logger _logger2;
 
         private List<TransportCarCameraToTunnel> cameralist;
 
@@ -67,7 +70,17 @@ namespace SZY.Platform.WebApi.Client
                     .WithCredentials("admin", "public")
                     .Build();
             client = new MqttFactory().CreateMqttClient();
-            client.UseApplicationMessageReceivedHandler(OnMessage2);
+            client.UseApplicationMessageReceivedHandler(OnMessage3);
+
+
+            _logger2 = new LoggerConfiguration()
+#if DEBUG
+        .MinimumLevel.Debug()
+#else
+        .MinimumLevel.Information()
+#endif
+        .WriteTo.File(@"c:\\SZYLogs\DataTransferService.txt", rollingInterval: RollingInterval.Day)
+        .CreateLogger();
         }
 
         /// <summary>
@@ -75,7 +88,7 @@ namespace SZY.Platform.WebApi.Client
         /// </summary>
         private void GenarateCamera()
         {
-            //找这个开services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
+            //找到这个打开services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
             //services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();
             //services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
             //{
@@ -278,6 +291,29 @@ namespace SZY.Platform.WebApi.Client
             catch (Exception ex)
             {
                 Console.WriteLine("Erro ao tentar ler a msnsagem: " + ex.Message);
+                //throw;
+            }
+        }
+
+        //长江隧桥处理好的算法数据再做处理
+        public virtual async void OnMessage3(MqttApplicationMessageReceivedEventArgs eventArgs)
+        {
+            try
+            {
+                _logger2.Warning("开始接收mqtt数据");
+                var jsonPayload = Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
+                var topic = eventArgs.ApplicationMessage.Topic;
+                if (topic.Contains(_configuration["MQTTSet:TongJiSend"].ToString()))
+                {
+                    JObject jb = JsonConvert.DeserializeObject<JObject>(jsonPayload);
+                    DataTransferService.EnqueueTask(jb);
+                    _logger2.Warning("已经推入 内存消息队列");
+                    _logger2.Warning(jsonPayload);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("OnMessage3: " + ex.Message);
                 //throw;
             }
         }

@@ -47,10 +47,9 @@ namespace SZY.Platform.WebApi.Infrastructure
 
             services.AddTransient<IMaintenanceService, MaintenanceService>();
             services.AddTransient<IBusAlarmService, BusAlarmService>();
-
-            //services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
-
-            //services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();
+            services.AddHostedService<DataTransferService>();
+            services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
+            services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();
 
             var builder = new ConfigurationBuilder()
     //.SetBasePath("path here") //<--You would need to set the path
@@ -58,20 +57,32 @@ namespace SZY.Platform.WebApi.Infrastructure
 
             IConfiguration _configuration = builder.Build();
 
-            //services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
-            //{
-            //    aspOptionBuilder
-            //    .WithCredentials("admin", "public")
-            //    .WithClientId("zdh" + Guid.NewGuid().ToString("D"))
-            //    .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
-            //});
+            services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
+            {
+                aspOptionBuilder
+                .WithCredentials("admin", "public")
+                .WithClientId("zdh" + Guid.NewGuid().ToString("D"))
+                .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
+            });
 
-            //services.AddSingleton<MosquittoMqttClientService>();
-            //services.AddSingleton<IHostedService>(serviceProvider =>
-            //{
-            //    return serviceProvider.GetService<MosquittoMqttClientService>();
-            //});
+            services.AddSingleton<MosquittoMqttClientService>();
+            services.AddSingleton<IHostedService>(serviceProvider =>
+            {
+                return serviceProvider.GetService<MosquittoMqttClientService>();
+            });
             return services;
+        }
+
+
+    }
+
+    public static class ServiceLocator
+    {
+        public static IServiceProvider Services { get; private set; }
+
+        public static void SetServices(IServiceProvider services)
+        {
+            Services = services;
         }
     }
 }

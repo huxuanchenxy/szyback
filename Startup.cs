@@ -78,10 +78,13 @@ namespace SZY.Platform.WebApi
             //});
             //services.AddConsulService(Configuration);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<FundJob2>();
-            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
-            services.AddSingleton<QuartzStart>();
-            services.AddSingleton<IJobFactory, IOCJobFactory>();
+
+            //Quartz定时任务 还有下面的ar quartz = app.ApplicationServices.GetRequiredService<QuartzStart>();-----------------------------------------------------------
+            //services.AddSingleton<FundJob2>();
+            //services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
+            //services.AddSingleton<QuartzStart>();
+            //services.AddSingleton<IJobFactory, IOCJobFactory>();
+            //Quartz定时任务-----------------------------------------------------------
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -117,15 +120,15 @@ builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseHttpsRedirection();
             app.UseMvc();
             //国展中心脚本停止
-            var quartz = app.ApplicationServices.GetRequiredService<QuartzStart>();
-            lifetime.ApplicationStarted.Register(() =>
-            {
-                quartz.Start().Wait();
-            });
-            lifetime.ApplicationStopped.Register(() =>
-            {
-                quartz.Stop();
-            });
+            //var quartz = app.ApplicationServices.GetRequiredService<QuartzStart>();
+            //lifetime.ApplicationStarted.Register(() =>
+            //{
+            //    quartz.Start().Wait();
+            //});
+            //lifetime.ApplicationStopped.Register(() =>
+            //{
+            //    quartz.Stop();
+            //});
         }
 
     }
