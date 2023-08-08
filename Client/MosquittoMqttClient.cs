@@ -83,6 +83,11 @@ namespace SZY.Platform.WebApi.Client
         .CreateLogger();
         }
 
+        public bool CheckConnect()
+        {
+            return client.IsConnected;
+        }
+
         /// <summary>
         /// 摄像头映射偏移量
         /// </summary>
@@ -159,7 +164,7 @@ namespace SZY.Platform.WebApi.Client
             //payload.status = "Online";
             //payload.connectedOn = DateTime.Now.ToString();
 
-            await client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("transport/offline/car16").Build());
+            await client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(_configuration["MQTTSet:TongJiSend"]).Build());
 
             if (!client.IsConnected)
             {
@@ -303,6 +308,7 @@ namespace SZY.Platform.WebApi.Client
                 _logger2.Warning("开始接收mqtt数据");
                 var jsonPayload = Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
                 var topic = eventArgs.ApplicationMessage.Topic;
+                _logger2.Warning("topic是:" + topic);
                 if (topic.Contains(_configuration["MQTTSet:TongJiSend"].ToString()))
                 {
                     JObject jb = JsonConvert.DeserializeObject<JObject>(jsonPayload);

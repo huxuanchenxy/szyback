@@ -8,5 +8,6 @@ namespace SZY.Platform.WebApi.Client
     {
         Task StartClientAsync(ITransportCameraRepo<TransportCarCameraToTunnel> repo);
         Task StopClientAsync();
+        Task PublishMessageAsync(string topic, string payload, bool retainFlag = false, int qos = 0);
     }
 }

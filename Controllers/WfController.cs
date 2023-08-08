@@ -89,23 +89,23 @@ namespace SZY.Platform.WebApi.Controllers
 
 
 
-        [HttpGet("TransportCar")]
-        public async Task<ActionResult<ApiResult>> TransportCar([FromQuery] CarQueryParm parm)
-        {
-            ApiResult retapi = new ApiResult { code = Code.Failure };
-            try
-            {
-                await Publish_FakeCar_Message(_logger, parm.times, parm.sleep, parm.roadpart, parm.direction, parm.carcount, parm.carspeed, parm.firstcarloc, parm.offset1, parm.offset2);
-                retapi.code = Code.Success;
-            }
-            catch (System.Exception ex)
-            {
-                retapi.msg = string.Format(
-                    "异常信息:{0}",
-                    ex.Message);
-            }
-            return retapi;
-        }
+        //[HttpGet("TransportCar")]
+        //public async Task<ActionResult<ApiResult>> TransportCar([FromQuery] CarQueryParm parm)
+        //{
+        //    ApiResult retapi = new ApiResult { code = Code.Failure };
+        //    try
+        //    {
+        //        await Publish_FakeCar_Message(_logger, parm.times, parm.sleep, parm.roadpart, parm.direction, parm.carcount, parm.carspeed, parm.firstcarloc, parm.offset1, parm.offset2);
+        //        retapi.code = Code.Success;
+        //    }
+        //    catch (System.Exception ex)
+        //    {
+        //        retapi.msg = string.Format(
+        //            "异常信息:{0}",
+        //            ex.Message);
+        //    }
+        //    return retapi;
+        //}
 
         [HttpGet("ReceiveTransportCar")]
         public async Task<ActionResult<ApiResult>> ReceiveTransportCar([FromQuery] string parm)
@@ -779,161 +779,10 @@ namespace SZY.Platform.WebApi.Controllers
         //   { "carid":"沪a9999","cartype":1,"carcolor":2,"distance":300,"curx":36.3131600729,"cury":36.3131600729,"roadlane":2}
         //]   
 
-        private async Task<List<carinfo>> GenerCar(int singlecarcount, int firststart, int offset1, int offset2)
-        {
-            List<carinfo> ret = new List<carinfo>();
-            for (int i = 1; i <= 3; i++)//模拟三根车道
-            {
-                int roadlane = i;
-                string caridfront = "沪A" + i;
-                int curroadlanecarcount = singlecarcount;
-
-                Random ran1 = new Random();
-                int firstcarstart = ran1.Next(0, firststart);
-                int distance = 0;
-                for (int j = 1; j <= curroadlanecarcount; j++)
-                {
-                    string curcarid = caridfront + j.ToString();
-                    string curnum = i.ToString() + j.ToString();
-                    //模拟第一次该车辆的起点位置
-
-                    if (j == 1)
-                    {
-                        distance = firstcarstart;
-                    }
-                    else
-                    {
-                        Random ran2 = new Random();
-                        int flowdistance = ran2.Next(offset1, offset2);//下一辆车的偏移距离
-                        distance = distance + flowdistance;
-                    }
-
-                    Random ran3 = new Random();
-                    int cartype = ran3.Next(1, 3);
-
-
-                    Random ran4 = new Random();
-                    int carcolor = ran4.Next(1, 7);
-                    ret.Add(new carinfo()
-                    {
-                        num = int.Parse(curnum),
-                        carid = curcarid,
-                        cartype = cartype,
-                        carcolor = carcolor,
-                        distance = distance,
-                        roadlane = roadlane
-                    });
-                }
-            }
-            return ret;
-        }
-        private async Task Publish_FakeCar_Message(Microsoft.Extensions.Logging.ILogger _logger, int times, int sleep, int rp, int dirc, int carcount, int cspeed, int firstcarloccation, int offset1, int offset2)
-        {
-
-            var mqttFactory = new MqttFactory();
-
-            using (var mqttClient = mqttFactory.CreateMqttClient())
-            {
-                var mqttClientOptions = new MqttClientOptionsBuilder()
-                    //.WithTcpServer("broker.hivemq.com")
-                    .WithWebSocketServer("ws://" + _configuration["MQTTSet:Ip"].ToString() + ":8083/mqtt")
-                    .Build();
-
-                await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
-
-                List<carinfo> carinfolist = await GenerCar(carcount, firstcarloccation, offset1, offset2);
-                int carspeed = cspeed;
-                for (int i = 0; i < times; i++)//时间间隔
-                {
-                    Thread.Sleep(sleep);
-                    transportret ret = new transportret();
-                    ret.code = 0;
-                    //DateTime dtStart = TimeZoneInfo.ConvertTimeFromUtc(new DateTime(1970, 1, 1, 0, 0, 0), TimeZoneInfo.Local);
-                    //long timeStamp = Convert.ToInt32((DateTime.Now - dtStart).TotalMilliseconds);
-                    DateTime startTime = TimeZoneInfo.ConvertTime(new DateTime(1970, 1, 1, 8, 0, 0, 0), TimeZoneInfo.Local);
-                    long t = (DateTime.Now.Ticks - startTime.Ticks) / 10000;   //除10000调整为13位 
-                    //TimeSpan ts = new TimeSpan(DateTime.Now.Ticks);
-                    //ret.timestamp = ts.TotalMilliseconds.ToString();
-                    ret.timestamp = t.ToString();
-                    ret.msg = "成功";
-
-                    if (i != 0)//第二次开始，要让车辆动起来，则需要改变distance
-                    {
-                        for (int j = 0; j < carinfolist.Count; j++)
-                        {
-                            carinfolist[j].distance = carinfolist[j].distance + carspeed;
-                        }
-                    }
-                    ret.result = new transportresult() { roadpart = rp, direction = dirc, carinfo = carinfolist, camera = "K4+940" };
-                    string payload = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:ms");
-
-                    string payloadstr = JsonConvert.SerializeObject(ret);
-
-                    _logger.LogWarning(payloadstr);
-                    var applicationMessage = new MqttApplicationMessageBuilder()
-                    .WithTopic(_configuration["MQTTSet:FackSend"].ToString())
-                    .WithPayload(payloadstr)
-                                        .Build();
-
-                    await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-                }
-                //var applicationMessage = new MqttApplicationMessageBuilder()
-                //    .WithTopic("transport/car")
-                //    .WithPayload(DateTime.Now.ToString())
-                //    .Build();
-
-                //await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-
-                //Console.WriteLine("MQTT application message is published.");
-            }
-        }
-
-
-
     }
 
 
-    public class CarQueryParm
-    {
-        public int times { get; set; }
-        public int sleep { get; set; }
-        public int roadpart { get; set; }
-        public int direction { get; set; }
-        public int carcount { get; set; }
-        public int carspeed { get; set; }
-        public int firstcarloc { get; set; }
-        public int offset1 { get; set; }
-        public int offset2 { get; set; }
-    }
-    public class carinfo
-    {
-        public int num { get; set; }
-        public string carid { get; set; }
-        public int cartype { get; set; }
-        public int carcolor { get; set; }
-        public int distance { get; set; }
-        public string curx { get; set; }
-        public string cury { get; set; }
-        public int roadlane { get; set; }
-    }
-
-    public class transportret
-    {
-        public int code { get; set; }
-        public string timestamp { get; set; }
-        public string msg { get; set; }
-        public transportresult result { get; set; }
-    }
-
-    public class transportresult
-    {
-        public int roadpart { get; set; }
-        public string roadpartx { get; set; }
-        public string roadparty { get; set; }
-        public int direction { get; set; }
-        public string camera { get; set; }
-        public List<carinfo> carinfo { get; set; }
-    }
+    
 
     public class JingGaiRet
     {

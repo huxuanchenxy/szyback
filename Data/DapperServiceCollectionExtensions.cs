@@ -28,6 +28,7 @@ namespace SZY.Platform.WebApi.Data
             services.AddTransient<IJingGai2AlarmRepo<JingGai2Alarm>, JingGai2AlarmRepo>();
             services.AddTransient<IBusAlarmRepo<BusAlarm>, BusAlarmRepo>();
             services.AddTransient<ISimulationInfoRepo<SimulationInfo>, SimulationInfoRepo>();
+            services.AddTransient<IG40InfoRepo<G40Info>, G40InfoRepo>();
 
 
             //配置列名映射
@@ -62,6 +63,8 @@ namespace SZY.Platform.WebApi.Data
                 config.AddMap(new BusAlarmMap());
                 config.AddMap(new JingGai2Map());
                 config.AddMap(new SimulationInfoMap());
+                config.AddMap(new G40InfoMap());
+
 
             });
             return services;

@@ -31,7 +31,28 @@ namespace SZY.Platform.WebApi.Service
         //{
         //    client = new MosquittoMqttClient(options);
         //}
+        public IMosquittoMqttClient getClient()
+        {
 
+            //client.CheckConnect();
+            if (!client.CheckConnect())
+            {
+                try
+                {
+                    client.StartClientAsync(_repo).Wait();
+                }
+                catch (System.Exception)
+                {
+                    client.StopClientAsync();
+                }
+                finally
+                {
+                    client.StartClientAsync(_repo).Wait();
+                }
+
+            }
+            return client;
+        }
         public Task StartAsync(CancellationToken cancellationToken)
         {
             return client.StartClientAsync(_repo);

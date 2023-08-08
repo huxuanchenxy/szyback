@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using SZY.Platform.WebApi.Controllers;
 using SZY.Platform.WebApi.Model;
 using Tea;
