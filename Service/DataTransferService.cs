@@ -62,7 +62,7 @@ namespace SZY.Platform.WebApi.Service
 
         public Task StartAsync(System.Threading.CancellationToken cancellationToken)
         {
-            //_mqttservice = ServiceLocator.Services.GetService<MosquittoMqttClientService>();
+            _mqttservice = ServiceLocator.Services.GetService<MosquittoMqttClientService>();
             _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(collectingTime));
 
             return Task.CompletedTask;
@@ -135,15 +135,37 @@ namespace SZY.Platform.WebApi.Service
                         _logger.Warning("当前行存数据库有问题:" + ex.ToString());
                     }
 
-                    //try
-                    //{
-                    //    _mqttservice.getClient().PublishMessageAsync(_configuration["MQTTSet:CarCountAdd"], JsonConvert.SerializeObject(curdata), false, 0);
-                    //    _logger.Warning("已成功发送mqtt:" + _configuration["MQTTSet:CarCountAdd"] + " 内容是:"+curdata);
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    _logger.Warning("当前行发送到mqtt"+ _configuration["MQTTSet:CarCountAdd"] +"有问题:" + ex.ToString());
-                    //}
+                    try
+                    {
+                        _mqttservice.getClient().PublishMessageAsync(_configuration["MQTTSet:CarCountAdd"] + "/" + _configuration["MQTTSet:CarCountAddCamera"], JsonConvert.SerializeObject(curdata), false, 0);
+                        _logger.Warning("已成功发送每3分钟mqtt:" + _configuration["MQTTSet:CarCountAdd"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + " 内容是:" + JsonConvert.SerializeObject(curdata));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning("当前行发送每3分钟到mqtt" + _configuration["MQTTSet:CarCountAdd"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + "有问题:" + ex.ToString());
+                    }
+
+                    try
+                    {
+
+                        var curtime = _configuration["MQTTSet:CarCountAddLastHourDate"];
+                        var endtime = curtime == null ? DateTime.Now : Convert.ToDateTime(curtime + " " + DateTime.Now.ToString("hh:mm:ss"));
+                        var starttime = endtime.AddHours(-1);
+                        _logger.Warning("计算范围 starttime :" + starttime + " endtime:" + endtime);
+                        var sqlret = _repo.GetLastHour(new G40InfoParm() { StartTime = starttime, endTime = endtime,camera = dd.Key });
+                        var lasthourcarscount = 0;
+                        if (sqlret != null && sqlret.Result != null && sqlret.Result.rows != null)
+                        {
+                            var cursqlrow = sqlret.Result.rows[0];
+                            lasthourcarscount = cursqlrow.Carcount;
+                        }
+                        var curdata1 = new G40Info() { Camera = dd.Key, RoadPart = dic2[dd.Key].roadpart, Carcount = lasthourcarscount, Time = DateTime.Now, Timespan = collectingTime };
+                        _logger.Warning("已成功发送过去1小时mqtt:" + _configuration["MQTTSet:CarCountAddLastHour"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + " 内容是:" + JsonConvert.SerializeObject(curdata1));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning("当前行发送到过去1小时mqtt" + _configuration["MQTTSet:CarCountAddLastHour"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + "有问题:" + ex.ToString());
+                    }
                 }
 
 

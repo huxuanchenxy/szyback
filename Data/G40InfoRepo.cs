@@ -12,6 +12,7 @@ namespace SZY.Platform.WebApi.Data
     public interface IG40InfoRepo<T> where T : BaseEntity
     {
         Task<G40InfoPageView> GetPageList(G40InfoParm param);
+        Task<G40InfoPageView> GetLastHour(G40InfoParm param);
         Task<G40Info> Save(G40Info obj);
         Task<G40Info> GetByID(long id);
         Task<int> Update(G40Info obj);
@@ -36,27 +37,49 @@ namespace SZY.Platform.WebApi.Data
                 carcount,timespan FROM g40_info
                  ");
                 StringBuilder whereSql = new StringBuilder();
-                //whereSql.Append(" WHERE ai.ProcessInstanceID = '" + parm.ProcessInstanceID + "'");
-
-                //if (parm.AppName != null)
-                //{
-                //    whereSql.Append(" and ai.AppName like '%" + parm.AppName.Trim() + "%'");
-                //}
+                whereSql.Append(" WHERE 1 = 1 ");
+                if (parm.StartTime != null && parm.endTime != null)
+                {
+                    whereSql.Append(" and time >= '"+parm.StartTime+"' AND time < '"+parm.endTime+"'");
+                }
 
                 sql.Append(whereSql);
-                //验证是否有参与到流程中
-                //string sqlcheck = sql.ToString();
-                //sqlcheck += ("AND ai.CreatedByUserID = '" + parm.UserID + "'");
-                //var checkdata = await c.QueryFirstOrDefaultAsync<TaskViewModel>(sqlcheck);
-                //if (checkdata == null)
-                //{
-                //    return null;
-                //}
 
                 var data = await c.QueryAsync<G40Info>(sql.ToString());
                 var total = data.ToList().Count;
                 sql.Append(" order by " + parm.sort + " " + parm.order)
                 .Append(" limit " + (parm.page - 1) * parm.rows + "," + parm.rows);
+                var ets = await c.QueryAsync<G40Info>(sql.ToString());
+
+                G40InfoPageView ret = new G40InfoPageView();
+                ret.rows = ets.ToList();
+                ret.total = total;
+                return ret;
+            });
+        }
+
+        public async Task<G40InfoPageView> GetLastHour(G40InfoParm parm)
+        {
+            return await WithConnection(async c =>
+            {
+
+                StringBuilder sql = new StringBuilder();
+                sql.Append($@"  SELECT 
+                SUM(carcount) carcount  FROM g40_info
+                 ");
+                StringBuilder whereSql = new StringBuilder();
+                whereSql.Append(" WHERE camera = '"+parm.camera+"' ");
+                if (parm.StartTime != null && parm.endTime != null)
+                {
+                    whereSql.Append(" and time >= '" + parm.StartTime + "' AND time < '" + parm.endTime + "'");
+                }
+
+                sql.Append(whereSql);
+
+                var data = await c.QueryAsync<G40Info>(sql.ToString());
+                var total = data.ToList().Count;
+                //sql.Append(" order by " + parm.sort + " " + parm.order)
+                //.Append(" limit " + (parm.page - 1) * parm.rows + "," + parm.rows);
                 var ets = await c.QueryAsync<G40Info>(sql.ToString());
 
                 G40InfoPageView ret = new G40InfoPageView();

@@ -8,7 +8,9 @@ namespace SZY.Platform.WebApi.Model
 {
     public class G40InfoParm : BaseQueryParm
     {
-
+        public System.DateTime StartTime { get; set; }
+        public System.DateTime endTime { get; set; }
+        public string camera { get; set; }
     }
     public class G40InfoPageView
     {

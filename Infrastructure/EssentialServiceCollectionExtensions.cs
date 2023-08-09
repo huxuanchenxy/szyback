@@ -23,11 +23,12 @@ namespace SZY.Platform.WebApi.Infrastructure
                 configure(optionBuilder);
                 return optionBuilder.Build();
             });
-            //services.AddSingleton<MosquittoMqttClientService>();
-            //services.AddSingleton<IHostedService>(serviceProvider =>
-            //{
-            //    return serviceProvider.GetService<MosquittoMqttClientService>();
-            //});
+            services.AddSingleton<MosquittoMqttClientService>();
+            services.AddSingleton<IHostedService>(serviceProvider =>
+            {
+                ServiceLocator.SetServices(serviceProvider);
+                return serviceProvider.GetService<MosquittoMqttClientService>();
+            });
 
             return services;
         }
@@ -47,10 +48,9 @@ namespace SZY.Platform.WebApi.Infrastructure
 
             services.AddTransient<IMaintenanceService, MaintenanceService>();
             services.AddTransient<IBusAlarmService, BusAlarmService>();
+            //services.AddTransient<IBusInfoService, BusInfoService>();
+            //services.AddTransient<ISimulationInfoService, SimulationInfoService>();
             services.AddHostedService<DataTransferService>();
-            services.AddTransient<IMosquittoMqttClient, MosquittoMqttClient>();
-            services.AddTransient<IMosquittoMqttClientService, MosquittoMqttClientService>();
-
             var builder = new ConfigurationBuilder()
     //.SetBasePath("path here") //<--You would need to set the path
     .AddJsonFile("appsettings.json"); //or what ever file you have the settings
@@ -65,15 +65,8 @@ namespace SZY.Platform.WebApi.Infrastructure
                 .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
             });
 
-            services.AddSingleton<MosquittoMqttClientService>();
-            services.AddSingleton<IHostedService>(serviceProvider =>
-            {
-                return serviceProvider.GetService<MosquittoMqttClientService>();
-            });
             return services;
         }
-
-
     }
 
     public static class ServiceLocator
