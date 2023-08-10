@@ -77,13 +77,12 @@ namespace SZY.Platform.WebApi.Data
                 sql.Append(whereSql);
 
                 var data = await c.QueryAsync<G40Info>(sql.ToString());
-                var total = data.ToList().Count;
+                var total = data.ToList<G40Info>().Count;
                 //sql.Append(" order by " + parm.sort + " " + parm.order)
                 //.Append(" limit " + (parm.page - 1) * parm.rows + "," + parm.rows);
-                var ets = await c.QueryAsync<G40Info>(sql.ToString());
 
                 G40InfoPageView ret = new G40InfoPageView();
-                ret.rows = ets.ToList();
+                ret.rows = data.ToList();
                 ret.total = total;
                 return ret;
             });

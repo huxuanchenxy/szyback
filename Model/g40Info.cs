@@ -44,6 +44,7 @@ namespace SZY.Platform.WebApi.Model
     {
         public int num { get; set; }
         public string carid { get; set; }
+        public string caridnum { get; set; }
         public int cartype { get; set; }
         public int carcolor { get; set; }
         public int distance { get; set; }

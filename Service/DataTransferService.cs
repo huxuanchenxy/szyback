@@ -20,7 +20,7 @@ using SZY.Platform.WebApi.Data;
 
 namespace SZY.Platform.WebApi.Service
 {
-    public class DataTransferService: IHostedService, IDisposable
+    public class DataTransferService : IHostedService, IDisposable
     {
         private readonly Logger _logger;
         private readonly IConfiguration _configuration;
@@ -34,11 +34,11 @@ namespace SZY.Platform.WebApi.Service
         private static Timer _timer;
         private static int collectingTime = 30;
         public static int GetCollectingTime() { return collectingTime; }
-        public static bool EnqueueTask(JObject task) 
+        public static bool EnqueueTask(JObject task)
         {
-            lock (obj) 
+            lock (obj)
             {
-                 ItemsNow.Enqueue(task);
+                ItemsNow.Enqueue(task);
             }
             return true;
         }
@@ -72,10 +72,10 @@ namespace SZY.Platform.WebApi.Service
         {
             _logger.Warning("开始计算车流量");
             _logger.Warning("队列里的数据:");
-            _logger.Warning(JsonConvert.SerializeObject(ItemsNow));
+            //_logger.Warning(JsonConvert.SerializeObject(ItemsNow));
             if (ItemsNow.Count == 0)
                 return;
-            
+
             JObject[] tempItems;
             try
             {
@@ -97,10 +97,16 @@ namespace SZY.Platform.WebApi.Service
                         //_logger.Warning("当前行:");
                         //_logger.Warning(JsonConvert.SerializeObject(curobj));
 
-                        
+
                         //先去重，去除3分钟之内重复数的车辆
                         if (curobj != null && curobj.result != null && curobj.result.carinfo != null)
                         {
+                            for (int k = 0; k < curobj.result.carinfo.Count; k++)
+                            {
+                                var thisrowcarid = curobj.result.carinfo[k].carid == null ? "" : curobj.result.carinfo[k].carid;
+                                curobj.result.carinfo[k].caridnum = "cc" + curobj.result.carinfo[k].num + thisrowcarid;
+                            }
+                            _logger.Warning(JsonConvert.SerializeObject(curobj));
                             var roadpart = curobj.result.roadpart;
                             var camera = curobj.result.camera;
                             if (!dic.ContainsKey(camera))
@@ -117,7 +123,8 @@ namespace SZY.Platform.WebApi.Service
                                 dic2.Add(camera, new transportresult() { direction = curobj.result.direction, roadpart = curobj.result.roadpart });
                             }
                         }
-                    } catch (Exception ex)
+                    }
+                    catch (Exception ex)
                     {
                         _logger.Warning("当前行有问题:" + ex.ToString());
                     }
@@ -152,7 +159,7 @@ namespace SZY.Platform.WebApi.Service
                         var endtime = curtime == null ? DateTime.Now : Convert.ToDateTime(curtime + " " + DateTime.Now.ToString("hh:mm:ss"));
                         var starttime = endtime.AddHours(-1);
                         _logger.Warning("计算范围 starttime :" + starttime + " endtime:" + endtime);
-                        var sqlret = _repo.GetLastHour(new G40InfoParm() { StartTime = starttime, endTime = endtime,camera = dd.Key });
+                        var sqlret = _repo.GetLastHour(new G40InfoParm() { StartTime = starttime, endTime = endtime, camera = dd.Key });
                         var lasthourcarscount = 0;
                         if (sqlret != null && sqlret.Result != null && sqlret.Result.rows != null)
                         {
@@ -165,6 +172,28 @@ namespace SZY.Platform.WebApi.Service
                     catch (Exception ex)
                     {
                         _logger.Warning("当前行发送到过去1小时mqtt" + _configuration["MQTTSet:CarCountAddLastHour"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + "有问题:" + ex.ToString());
+                    }
+
+                    try
+                    {
+
+                        var curtime = _configuration["MQTTSet:CarCountAddLastHourDate"];
+                        var endtime = curtime == null ? DateTime.Now : Convert.ToDateTime(curtime + " " + DateTime.Now.ToString("hh:mm:ss"));
+                        var starttime = Convert.ToDateTime(endtime.ToString("yyyy-MM-dd 00:00:00"));
+                        _logger.Warning("计算范围 starttime :" + starttime + " endtime:" + endtime);
+                        var sqlret = _repo.GetLastHour(new G40InfoParm() { StartTime = starttime, endTime = endtime, camera = dd.Key });
+                        var lasthourcarscount = 0;
+                        if (sqlret != null && sqlret.Result != null && sqlret.Result.rows != null)
+                        {
+                            var cursqlrow = sqlret.Result.rows[0];
+                            lasthourcarscount = cursqlrow.Carcount;
+                        }
+                        var curdata1 = new G40Info() { Camera = dd.Key, RoadPart = dic2[dd.Key].roadpart, Carcount = lasthourcarscount, Time = DateTime.Now, Timespan = collectingTime };
+                        _logger.Warning("已成功发送从0点累计到现在mqtt:" + _configuration["MQTTSet:CarCountAddToday"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + " 内容是:" + JsonConvert.SerializeObject(curdata1));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning("当前行发送从0点累计到现在mqtt" + _configuration["MQTTSet:CarCountAddToday"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + "有问题:" + ex.ToString());
                     }
                 }
 
@@ -202,13 +231,14 @@ namespace SZY.Platform.WebApi.Service
         public bool Equals(carinfo x, carinfo y)
         {
             // Check if the carid of both objects are equal
-            return x.carid == y.carid;
+            //return x.carid == y.carid;
+            return x.caridnum == y.caridnum;
         }
 
         public int GetHashCode(carinfo car)
         {
             // Use the carid's hash code for determining the hash code
-            return car.carid.GetHashCode();
+            return car.caridnum.GetHashCode();
         }
     }
 
