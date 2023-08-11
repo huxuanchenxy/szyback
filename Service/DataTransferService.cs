@@ -17,6 +17,7 @@ using Serilog.Core;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using SZY.Platform.WebApi.Data;
+using SZY.Platform.WebApi.Helper;
 
 namespace SZY.Platform.WebApi.Service
 {
@@ -106,6 +107,7 @@ namespace SZY.Platform.WebApi.Service
                                 var thisrowcarid = curobj.result.carinfo[k].carid == null ? "" : curobj.result.carinfo[k].carid;
                                 curobj.result.carinfo[k].caridnum = "cc" + curobj.result.carinfo[k].num + thisrowcarid;
                             }
+                            curobj.time = AliyunHelper.GetDateTimeMilliseconds(long.Parse(curobj.timestamp));
                             _logger.Warning(JsonConvert.SerializeObject(curobj));
                             var roadpart = curobj.result.roadpart;
                             var camera = curobj.result.camera;
@@ -156,7 +158,7 @@ namespace SZY.Platform.WebApi.Service
                     {
 
                         var curtime = _configuration["MQTTSet:CarCountAddLastHourDate"];
-                        var endtime = curtime == null ? DateTime.Now : Convert.ToDateTime(curtime + " " + DateTime.Now.ToString("hh:mm:ss"));
+                        var endtime = curtime == null ? DateTime.Now : Convert.ToDateTime(curtime + " " + DateTime.Now.ToString("HH:mm:ss"));
                         var starttime = endtime.AddHours(-1);
                         _logger.Warning("计算范围 starttime :" + starttime + " endtime:" + endtime);
                         var sqlret = _repo.GetLastHour(new G40InfoParm() { StartTime = starttime, endTime = endtime, camera = dd.Key });
@@ -178,7 +180,7 @@ namespace SZY.Platform.WebApi.Service
                     {
 
                         var curtime = _configuration["MQTTSet:CarCountAddLastHourDate"];
-                        var endtime = curtime == null ? DateTime.Now : Convert.ToDateTime(curtime + " " + DateTime.Now.ToString("hh:mm:ss"));
+                        var endtime = curtime == null ? DateTime.Now : Convert.ToDateTime(curtime + " " + DateTime.Now.ToString("HH:mm:ss"));
                         var starttime = Convert.ToDateTime(endtime.ToString("yyyy-MM-dd 00:00:00"));
                         _logger.Warning("计算范围 starttime :" + starttime + " endtime:" + endtime);
                         var sqlret = _repo.GetLastHour(new G40InfoParm() { StartTime = starttime, endTime = endtime, camera = dd.Key });

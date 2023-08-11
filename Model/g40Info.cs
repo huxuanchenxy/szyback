@@ -2,7 +2,7 @@
 using Dapper.FluentMap.Mapping;
 using SZY.Platform.WebApi.Data;
 using System.Collections.Generic;
-
+using System;
 
 namespace SZY.Platform.WebApi.Model
 {
@@ -57,7 +57,9 @@ namespace SZY.Platform.WebApi.Model
     {
         public int code { get; set; }
         public string timestamp { get; set; }
+        public DateTime time { get; set; }
         public string msg { get; set; }
+        public int fakeindex { get; set; }
         public transportresult result { get; set; }
     }
 
@@ -68,6 +70,7 @@ namespace SZY.Platform.WebApi.Model
         public string roadparty { get; set; }
         public int direction { get; set; }
         public string camera { get; set; }
+        
         public List<carinfo> carinfo { get; set; }
 
         //public int carcount { get; set; }//g40info用

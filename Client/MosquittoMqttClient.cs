@@ -79,7 +79,7 @@ namespace SZY.Platform.WebApi.Client
 #else
         .MinimumLevel.Information()
 #endif
-        .WriteTo.File(@"c:\\SZYLogs\DataTransferService.txt", rollingInterval: RollingInterval.Day)
+        .WriteTo.File(@"c:\\SZYLogs\MosquittoMqttClient.txt", rollingInterval: RollingInterval.Day)
         .CreateLogger();
         }
 
@@ -326,7 +326,8 @@ namespace SZY.Platform.WebApi.Client
 
         public Task StopClientAsync()
         {
-            throw new NotImplementedException();
+            return client.DisconnectAsync();
+            //throw new NotImplementedException();
         }
     }
 }
