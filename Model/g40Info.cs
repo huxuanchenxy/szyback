@@ -26,6 +26,7 @@ namespace SZY.Platform.WebApi.Model
         public System.DateTime Time { get; set; }
         public int Carcount { get; set; }
         public int Timespan { get; set; }
+        public double Caravgspeed { get; set; }
     }
 
     public class CarQueryParm
@@ -51,6 +52,7 @@ namespace SZY.Platform.WebApi.Model
         public string curx { get; set; }
         public string cury { get; set; }
         public int roadlane { get; set; }
+        public DateTime time { get; set; }
     }
 
     public class transportret
@@ -86,6 +88,7 @@ namespace SZY.Platform.WebApi.Model
             Map(o => o.Camera).ToColumn("camera");
             Map(o => o.Time).ToColumn("time");
             Map(o => o.Carcount).ToColumn("carcount");
+            Map(o => o.Caravgspeed).ToColumn("caravgspeed");
             Map(o => o.Timespan).ToColumn("timespan");
         }
     }

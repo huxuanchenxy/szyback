@@ -83,7 +83,7 @@ namespace SZY.Platform.WebApi.Service
                 string caridfront = _configuration["FackCar:carfront"].ToString() + DateTime.Now.ToString("HHmmssfff") + i;
                 Random ran5 = new Random();
                 int curroadlanecarcount = ran5.Next(singlecarcount, singlecarcountRndMax);
-
+                _logger.Warning("当前车道lane=" + i + "  生成了 " + curroadlanecarcount + " 辆车");
                 Random ran1 = new Random();
                 int firstcarstart = ran1.Next(0, firststart);
                 int distance = 0;

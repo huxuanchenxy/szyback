@@ -98,6 +98,7 @@ namespace SZY.Platform.WebApi.Data
                     camera,
                     time,
                     carcount,
+                    caravgspeed,
                     timespan
                 ) VALUES 
                 (
@@ -105,6 +106,7 @@ namespace SZY.Platform.WebApi.Data
                     @Camera,
                     @Time,
                     @Carcount,
+                    @Caravgspeed,    
                     @Timespan
                     );
                     ";

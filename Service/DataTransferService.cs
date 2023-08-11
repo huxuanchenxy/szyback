@@ -98,27 +98,29 @@ namespace SZY.Platform.WebApi.Service
                         //_logger.Warning("当前行:");
                         //_logger.Warning(JsonConvert.SerializeObject(curobj));
 
-
                         //先去重，去除3分钟之内重复数的车辆
                         if (curobj != null && curobj.result != null && curobj.result.carinfo != null)
                         {
+                            
                             for (int k = 0; k < curobj.result.carinfo.Count; k++)
                             {
                                 var thisrowcarid = curobj.result.carinfo[k].carid == null ? "" : curobj.result.carinfo[k].carid;
                                 curobj.result.carinfo[k].caridnum = "cc" + curobj.result.carinfo[k].num + thisrowcarid;
+                                curobj.result.carinfo[k].time = curobj.time;//把transportret的时间塞到carinfo里面去
                             }
                             curobj.time = AliyunHelper.GetDateTimeMilliseconds(long.Parse(curobj.timestamp));
                             _logger.Warning(JsonConvert.SerializeObject(curobj));
                             var roadpart = curobj.result.roadpart;
                             var camera = curobj.result.camera;
-                            if (!dic.ContainsKey(camera))
+                            if (!dic.ContainsKey(camera))//按摄像头分组
                             {
                                 dic.Add(camera, curobj.result.carinfo);
                             }
                             else
                             {
                                 var prelist = dic[camera];
-                                dic[camera] = prelist.Concat<carinfo>(curobj.result.carinfo).Distinct(new carinfoComparer()).ToList();
+                                //dic[camera] = prelist.Concat<carinfo>(curobj.result.carinfo).Distinct(new carinfoComparer()).ToList();
+                                dic[camera] = prelist.Concat<carinfo>(curobj.result.carinfo).ToList();
                             }
                             if (!dic2.ContainsKey(camera))
                             {
@@ -131,9 +133,11 @@ namespace SZY.Platform.WebApi.Service
                         _logger.Warning("当前行有问题:" + ex.ToString());
                     }
                 }
-                foreach (var dd in dic)
+                foreach (var dd in dic)//按摄像头分组
                 {
-                    var curdata = new G40Info() { Camera = dd.Key, RoadPart = dic2[dd.Key].roadpart, Carcount = dd.Value.Count, Time = DateTime.Now, Timespan = collectingTime };
+                    var caravgspeed = GetAvgSpeed(dd.Value);
+                    var distinctdd = dd.Value.ToList<carinfo>().Distinct(new carinfoComparer()).ToList();
+                    var curdata = new G40Info() { Camera = dd.Key, RoadPart = dic2[dd.Key].roadpart, Carcount = distinctdd.Count, Time = DateTime.Now, Timespan = collectingTime,Caravgspeed = caravgspeed };
                     try
                     {
                         _repo.Save(curdata);
@@ -141,7 +145,7 @@ namespace SZY.Platform.WebApi.Service
                     }
                     catch (Exception ex)
                     {
-                        _logger.Warning("当前行存数据库有问题:" + ex.ToString());
+                        _logger.Warning("当前行3分钟数据存数据库有问题:" + ex.ToString());
                     }
 
                     try
@@ -211,6 +215,24 @@ namespace SZY.Platform.WebApi.Service
 
 
 
+        }
+
+        private double GetAvgSpeed(List<carinfo> list)
+        {
+            var ret = 0.0;
+            if (list != null)
+            {
+                //_logger.Warning("GetAvgSpeed" + JsonConvert.SerializeObject(list));
+                list = list.OrderBy(a => a.time).ToList<carinfo>();
+                var rndcar = list[0];//随便取一辆车
+                list = list.Where(a => a.caridnum == rndcar.caridnum).ToList<carinfo>();
+                var thislastrndcar = list[list.Count - 1];
+                var timespan = (thislastrndcar.time - rndcar.time).TotalSeconds;
+                double thiscameraMeta = double.Parse(_configuration["FackCar:camerajuli"]);
+                var mimiao = thiscameraMeta / (timespan == 0 ? 1: timespan);//米每秒
+                ret = mimiao * 60 * 60 / 1000;//公里每小时
+            }
+            return ret;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
