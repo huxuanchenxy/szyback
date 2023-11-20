@@ -80,7 +80,7 @@ namespace SZY.Platform.WebApi
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             //Quartz定时任务 还有下面的ar quartz = app.ApplicationServices.GetRequiredService<QuartzStart>();-----------------------------------------------------------
-            services.AddSingleton<FundJob3>();
+            services.AddSingleton<FundJob2v2>();
             services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
             services.AddSingleton<QuartzStart>();
             services.AddSingleton<IJobFactory, IOCJobFactory>();

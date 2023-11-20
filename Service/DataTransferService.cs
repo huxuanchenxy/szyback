@@ -105,7 +105,7 @@ namespace SZY.Platform.WebApi.Service
                             for (int k = 0; k < curobj.result.carinfo.Count; k++)
                             {
                                 var thisrowcarid = curobj.result.carinfo[k].carid == null ? "" : curobj.result.carinfo[k].carid;
-                                curobj.result.carinfo[k].caridnum = "cc" + curobj.result.carinfo[k].num + thisrowcarid;
+                                curobj.result.carinfo[k].caridnum = curobj.result.camera + "c_c" + curobj.result.carinfo[k].num + thisrowcarid;
                                 curobj.result.carinfo[k].time = curobj.time;//把transportret的时间塞到carinfo里面去
                             }
                             curobj.time = AliyunHelper.GetDateTimeMilliseconds(long.Parse(curobj.timestamp));
@@ -147,15 +147,16 @@ namespace SZY.Platform.WebApi.Service
                     {
                         _logger.Warning("当前行3分钟数据存数据库有问题:" + ex.ToString());
                     }
-
+                    var curcamera = dd.Key.Replace("+", "_");
                     try
                     {
-                        _mqttservice.getClient().PublishMessageAsync(_configuration["MQTTSet:CarCountAdd"] + "/" + _configuration["MQTTSet:CarCountAddCamera"], JsonConvert.SerializeObject(curdata), false, 0);
-                        _logger.Warning("已成功发送每3分钟mqtt:" + _configuration["MQTTSet:CarCountAdd"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + " 内容是:" + JsonConvert.SerializeObject(curdata));
+                        
+                        _mqttservice.getClient().PublishMessageAsync(_configuration["MQTTSet:CarCountAdd"] + "/" + curcamera, JsonConvert.SerializeObject(curdata), false, 0);
+                        _logger.Warning("已成功发送每3分钟mqtt:" + _configuration["MQTTSet:CarCountAdd"] + "/" + curcamera + " 内容是:" + JsonConvert.SerializeObject(curdata));
                     }
                     catch (Exception ex)
                     {
-                        _logger.Warning("当前行发送每3分钟到mqtt" + _configuration["MQTTSet:CarCountAdd"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + "有问题:" + ex.ToString());
+                        _logger.Warning("当前行发送每3分钟到mqtt" + _configuration["MQTTSet:CarCountAdd"] + "/" + curcamera + "有问题:" + ex.ToString());
                     }
 
                     try
@@ -173,11 +174,12 @@ namespace SZY.Platform.WebApi.Service
                             lasthourcarscount = cursqlrow.Carcount;
                         }
                         var curdata1 = new G40Info() { Camera = dd.Key, RoadPart = dic2[dd.Key].roadpart, Carcount = lasthourcarscount, Time = DateTime.Now, Timespan = collectingTime };
-                        _logger.Warning("已成功发送过去1小时mqtt:" + _configuration["MQTTSet:CarCountAddLastHour"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + " 内容是:" + JsonConvert.SerializeObject(curdata1));
+                        _mqttservice.getClient().PublishMessageAsync(_configuration["MQTTSet:CarCountAddLastHour"] + "/" + curcamera, JsonConvert.SerializeObject(curdata1), false, 0);
+                        _logger.Warning("已成功发送过去1小时mqtt:" + _configuration["MQTTSet:CarCountAddLastHour"] + "/" + curcamera + " 内容是:" + JsonConvert.SerializeObject(curdata1));
                     }
                     catch (Exception ex)
                     {
-                        _logger.Warning("当前行发送到过去1小时mqtt" + _configuration["MQTTSet:CarCountAddLastHour"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + "有问题:" + ex.ToString());
+                        _logger.Warning("当前行发送到过去1小时mqtt" + _configuration["MQTTSet:CarCountAddLastHour"] + "/" + curcamera + "有问题:" + ex.ToString());
                     }
 
                     try
@@ -195,11 +197,12 @@ namespace SZY.Platform.WebApi.Service
                             lasthourcarscount = cursqlrow.Carcount;
                         }
                         var curdata1 = new G40Info() { Camera = dd.Key, RoadPart = dic2[dd.Key].roadpart, Carcount = lasthourcarscount, Time = DateTime.Now, Timespan = collectingTime };
-                        _logger.Warning("已成功发送从0点累计到现在mqtt:" + _configuration["MQTTSet:CarCountAddToday"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + " 内容是:" + JsonConvert.SerializeObject(curdata1));
+                        _mqttservice.getClient().PublishMessageAsync(_configuration["MQTTSet:CarCountAddToday"] + "/" + curcamera, JsonConvert.SerializeObject(curdata1), false, 0);
+                        _logger.Warning("已成功发送从0点累计到现在mqtt:" + _configuration["MQTTSet:CarCountAddToday"] + "/" + curcamera + " 内容是:" + JsonConvert.SerializeObject(curdata1));
                     }
                     catch (Exception ex)
                     {
-                        _logger.Warning("当前行发送从0点累计到现在mqtt" + _configuration["MQTTSet:CarCountAddToday"] + "/" + _configuration["MQTTSet:CarCountAddCamera"] + "有问题:" + ex.ToString());
+                        _logger.Warning("当前行发送从0点累计到现在mqtt" + _configuration["MQTTSet:CarCountAddToday"] + "/" + curcamera + "有问题:" + ex.ToString());
                     }
                 }
 
@@ -223,14 +226,24 @@ namespace SZY.Platform.WebApi.Service
             if (list != null)
             {
                 //_logger.Warning("GetAvgSpeed" + JsonConvert.SerializeObject(list));
-                list = list.OrderBy(a => a.time).ToList<carinfo>();
-                var rndcar = list[0];//随便取一辆车
-                list = list.Where(a => a.caridnum == rndcar.caridnum).ToList<carinfo>();
-                var thislastrndcar = list[list.Count - 1];
-                var timespan = (thislastrndcar.time - rndcar.time).TotalSeconds;
-                double thiscameraMeta = double.Parse(_configuration["FackCar:camerajuli"]);
-                var mimiao = thiscameraMeta / (timespan == 0 ? 1: timespan);//米每秒
-                ret = mimiao * 60 * 60 / 1000;//公里每小时
+                try
+                {
+                    list = list.OrderBy(a => a.time).ToList<carinfo>();
+                    var rndcar = list[0];//随便取一辆车
+                    list = list.Where(a => a.caridnum == rndcar.caridnum).ToList<carinfo>();
+                    var thislastrndcar = list[list.Count - 1];
+                    var timespan = (thislastrndcar.time - rndcar.time).TotalSeconds;
+                    double thiscameraMeta = double.Parse(_configuration["FackCar:camerajuli"]);
+                    var mimiao = thiscameraMeta / (timespan == 0 ? 1 : timespan);//米每秒
+                    double speedup = double.Parse(_configuration["FackCar:carAvgSpeedup"]);
+                    ret = mimiao * 60 * 60 / 1000 * speedup;//公里每小时
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warning("计算平均速度有问题:"  + ex.ToString());
+                }
+
+                
             }
             return ret;
         }

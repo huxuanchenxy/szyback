@@ -51,7 +51,7 @@ namespace SZY.Platform.WebApi.Controllers
         }
 
 
-        [HttpPost("AiAlarm")]
+        [HttpPost("AiAlarm2")]
         public async Task<ActionResult<ApiResult>> PostAiAlarm(BusRoot parm)
         {
             ApiResult ret = new ApiResult { code = Code.Success };
@@ -59,11 +59,73 @@ namespace SZY.Platform.WebApi.Controllers
             {
                 var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
                 _logger.Warning("PostAiAlarm 来自:" + ip + "的请求   obj: " + JsonConvert.SerializeObject(parm));
-                if (parm != null)
+                //if (parm != null)
+                //{
+                //    await _service.Save(parm);
+                //    Base64toImg(parm.alarm_picture);
+                //}
+            }
+            catch (System.Exception ex)
+            {
+                _logger.Warning("PostAiAlarm" + ex.Message.ToString());
+                ret.msg = string.Format(
+                    "异常信息:{0}",
+                    ex.Message);
+            }
+            return ret;
+        }
+
+
+        [HttpPost("AiAlarm")]
+        public async Task<ActionResult<ApiResult>> PostAiAlarm2()
+        {
+            ApiResult ret = new ApiResult { code = Code.Success };
+            try
+            {
+                var ip = _accessor.HttpContext.Connection.RemoteIpAddress.ToString();
+                if (_accessor.HttpContext.Request.ContentLength == 0)
                 {
-                    await _service.Save(parm);
-                    Base64toImg(parm.alarm_picture);
+                    ret.code = Code.DataIsnotExist;
+                    return ret;
                 }
+                Stream postData = _accessor.HttpContext.Request.Body;
+                ;
+                if (postData == null)
+                {
+                    ret.code = Code.DataIsnotExist;
+                    return ret;
+                }
+
+                StreamReader sRead;
+                string postBody;
+                //postData.Seek(0, SeekOrigin.Begin);
+                sRead = new StreamReader(postData);
+                postBody = sRead.ReadToEnd();
+
+                //Console.WriteLine(postBody);
+                _logger.Warning("PostAiAlarm 来自:" + ip + "的请求   obj: " + postBody);
+                JObject jb = JsonConvert.DeserializeObject<JObject>(postBody);
+                if (jb == null || jb.Count == 0)
+                {
+                    ret.code = Code.CheckDataRulesFail;
+                    return ret;
+                }
+                BusRoot2 datafrom = JsonConvert.DeserializeObject<BusRoot2>(postBody);
+                if (datafrom != null)
+                {
+                    //站点文件目录
+                    string fileDir = _configuration["CheZai:Pic"] + DateTime.Now.Year.ToString() + "\\" + DateTime.Now.Month.ToString() + "\\";
+                    //文件名称
+                    string fileName = "chezai" + DateTime.Now.ToString("yyyyMMddHHmmssff");
+                    string filePath = Path.Combine(fileDir, fileName);
+                    await _service.Save(datafrom, filePath);
+                    if (!string.IsNullOrEmpty(datafrom.alarm_picture))
+                    {
+                        Base64toImg(datafrom.alarm_picture, fileDir, fileName);
+                    }
+                    
+                }
+
             }
             catch (System.Exception ex)
             {
@@ -76,12 +138,9 @@ namespace SZY.Platform.WebApi.Controllers
         }
 
         [NonAction]
-        private void Base64toImg(string base64str)
+        private void Base64toImg(string base64str,string fileDir,string fileName)
         {
-            //站点文件目录
-            string fileDir = _configuration["CheZai:Pic"]+ DateTime.Now.Year.ToString() + "\\" + DateTime.Now.Month.ToString() + "\\";
-            //文件名称
-            string fileName = "chezai" + DateTime.Now.ToString("yyyyMMddHHmmssff");
+            
             //保存文件所在站点位置
             string filePath = Path.Combine(fileDir, fileName);
 
@@ -114,19 +173,19 @@ namespace SZY.Platform.WebApi.Controllers
 
     public class Alarm_objectsItem
     {
-        public int @class { get; set; }
+        public int? @class { get; set; }
 
         public string class_name { get; set; }
 
         public double confidence { get; set; }
 
-        public int x { get; set; }
+        public int? x { get; set; }
 
-        public int y { get; set; }
+        public int? y { get; set; }
 
-        public int width { get; set; }
+        public int? width { get; set; }
 
-        public int height { get; set; }
+        public int? height { get; set; }
 
     }
 
@@ -134,7 +193,7 @@ namespace SZY.Platform.WebApi.Controllers
 
     public class Alarm_dataItem
     {
-        public int alarm_type { get; set; }
+        public int? alarm_type { get; set; }
 
         public List<Alarm_objectsItem> alarm_objects { get; set; }
 
@@ -149,9 +208,9 @@ namespace SZY.Platform.WebApi.Controllers
 
         public string site_id { get; set; }
 
-        public double camera_lng { get; set; }
+        public double? camera_lng { get; set; }
 
-        public double camera_lat { get; set; }
+        public double? camera_lat { get; set; }
 
         public string camera_url { get; set; }
 

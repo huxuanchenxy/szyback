@@ -7,6 +7,7 @@ using System.Net;
 using System.Threading.Tasks;
 using SZY.Platform.WebApi.Controllers;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 
 // Coded By admin 2019/11/9 13:46:57
@@ -14,7 +15,7 @@ namespace SZY.Platform.WebApi.Service
 {
     public interface IBusAlarmService
     {
-        Task<ApiResult> Save(BusRoot obj);
+        Task<ApiResult> Save(BusRoot2 obj, string filePath);
     }
 
     public class BusAlarmService : IBusAlarmService
@@ -28,7 +29,7 @@ namespace SZY.Platform.WebApi.Service
             _repo = repo;
             //_userID = _authhelper.GetUserId();
         }
-        public async Task<ApiResult> Save(BusRoot obj)
+        public async Task<ApiResult> Save(BusRoot2 obj,string filePath)
         {
             ApiResult ret = new ApiResult();
             ret.code = Code.Success;
@@ -41,17 +42,18 @@ namespace SZY.Platform.WebApi.Service
                         
                         string camera_id = obj.camera_id;
                         string site_id = obj.site_id;
-                        double camera_lng = obj.camera_lng;
-                        double camera_lat = obj.camera_lat;
-                        string camera_url = obj.camera_url;
-                        string camera_name = obj.camera_name;
+                        string camera_lng = obj.camera_lng;
+                        string camera_lat = obj.camera_lat;
+                        string camera_url = obj.camera_url.ToString();
+                        string camera_name = obj.camera_name.ToString();
                         string alarm_picture = obj.alarm_picture;
                         DateTime time = Convert.ToDateTime(obj.time);
                         foreach (var alarmobj in obj.alarm_data)
                         {
                             BusAlarm ent = new BusAlarm();
-                            int alarm_type = alarmobj.alarm_type;
-                            string alarm_obj = JsonConvert.SerializeObject(alarmobj.alarm_objects);
+                            int? alarm_type = alarmobj.alarm_type;
+                            
+                            string alarm_obj = JsonConvert.SerializeObject(alarmobj);
                             ent.camera_id = camera_id;
                             ent.site_id = site_id;
                             ent.camera_lng = camera_lng;
@@ -63,16 +65,15 @@ namespace SZY.Platform.WebApi.Service
                             ent.alarm_picture = alarm_picture;
                             ent.alarm_des = "";
                             ent.time = time;
-                            switch (alarm_type)
+                            List<string> classnamelist = alarmobj.class_name;
+                            foreach (var classname in classnamelist)
                             {
-                                case 1:
-                                    ent.alarm_des = "有人闯入";
-                                    break;
-                                case 2:
-                                    ent.alarm_des = "发现明火";
-                                    break;
+                                ent.alarm_des = classname;
+                                ent.pic_url = filePath;
+                                await _repo.Save(ent);
                             }
-                            await _repo.Save(ent);
+
+                            
                         }
                     }
                 }

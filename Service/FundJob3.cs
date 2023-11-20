@@ -21,7 +21,7 @@ namespace SZY.Platform.WebApi.Service
         private static Timer _timer;
         private static int carspeed;
         private static int times;
-        private static int sleep;
+        private static double sleep;
         private static object obj = new Object();
         private static MosquittoMqttClientService _mqttservice;
         public FundJob3(IConfiguration configuration)
@@ -133,7 +133,9 @@ namespace SZY.Platform.WebApi.Service
             ret.code = 0;
             ret.msg = "成功";
             ret.result = new transportresult() { roadpart = rp, direction = dirc, carinfo = carinfolist, camera = _configuration["FackCar:camera"] };
-            _timer = new Timer(DoWork, ret, TimeSpan.Zero, TimeSpan.FromSeconds(sleep));
+            Random ran = new Random();
+            sleep = ran.Next(int.Parse(_configuration["FackCar:carAvgSpeedRndMin"]), int.Parse(_configuration["FackCar:carAvgSpeedRndMax"]));
+            _timer = new Timer(DoWork, ret, TimeSpan.Zero, TimeSpan.FromMilliseconds(sleep));
             //for (int i = 0; i < times; i++)//时间间隔
             //{
             //    //Thread.Sleep(sleep);

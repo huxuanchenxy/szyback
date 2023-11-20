@@ -23,12 +23,12 @@ namespace SZY.Platform.WebApi.Infrastructure
                 configure(optionBuilder);
                 return optionBuilder.Build();
             });
-            services.AddSingleton<MosquittoMqttClientService>();
-            services.AddSingleton<IHostedService>(serviceProvider =>
-            {
-                ServiceLocator.SetServices(serviceProvider);
-                return serviceProvider.GetService<MosquittoMqttClientService>();
-            });
+            //services.AddSingleton<MosquittoMqttClientService>();
+            //services.AddSingleton<IHostedService>(serviceProvider =>
+            //{
+            //    ServiceLocator.SetServices(serviceProvider);
+            //    return serviceProvider.GetService<MosquittoMqttClientService>();
+            //});
 
             return services;
         }
@@ -57,13 +57,13 @@ namespace SZY.Platform.WebApi.Infrastructure
 
             IConfiguration _configuration = builder.Build();
 
-            services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
-            {
-                aspOptionBuilder
-                .WithCredentials("admin", "public")
-                .WithClientId("zdh" + Guid.NewGuid().ToString("D"))
-                .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
-            });
+            //services.AddMqttClientServiceWithConfig(aspOptionBuilder =>
+            //{
+            //    aspOptionBuilder
+            //    .WithCredentials("admin", "public")
+            //    .WithClientId("zdh" + Guid.NewGuid().ToString("D"))
+            //    .WithTcpServer(_configuration["MQTTSet:Ip"], 1883);
+            //});
 
             return services;
         }

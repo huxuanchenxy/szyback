@@ -27,8 +27,8 @@ namespace SZY.Platform.WebApi.Data
                 try
                 {
 
-                    string sql = $@" INSERT INTO `aisense`.`bus_alarm`(`camera_id`, `site_id`, `camera_lng`, `camera_lat`, `camera_url`, `camera_name`, `time`, `alarm_picture`, `alarm_type`, `alarm_objects`, `alarm_des`) 
-VALUES (@camera_id, @site_id, @camera_lng, @camera_lat, @camera_url, @camera_name, @time, @alarm_picture, @alarm_type, @alarm_objects, @alarm_des);
+                    string sql = $@" INSERT INTO `aisense`.`bus_alarm`(`camera_id`, `site_id`, `camera_lng`, `camera_lat`, `camera_url`, `camera_name`, `time`, `alarm_picture`, `alarm_type`, `alarm_objects`, `alarm_des`, `pic_url`) 
+VALUES (@camera_id, @site_id, @camera_lng, @camera_lat, @camera_url, @camera_name, @time, @alarm_picture, @alarm_type, @alarm_objects, @alarm_des, @pic_url);
                     ";
                     sql += "SELECT LAST_INSERT_ID() ";
                     int newid = await c.QueryFirstOrDefaultAsync<int>(sql, obj, trans);
