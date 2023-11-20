@@ -50,7 +50,7 @@ namespace SZY.Platform.WebApi.Infrastructure
             services.AddTransient<IBusAlarmService, BusAlarmService>();
             //services.AddTransient<IBusInfoService, BusInfoService>();
             //services.AddTransient<ISimulationInfoService, SimulationInfoService>();
-            services.AddHostedService<DataTransferService>();
+            //services.AddHostedService<DataTransferService>();
             var builder = new ConfigurationBuilder()
     //.SetBasePath("path here") //<--You would need to set the path
     .AddJsonFile("appsettings.json"); //or what ever file you have the settings
